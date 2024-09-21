@@ -1,8 +1,8 @@
 /** @jsxImportSource @emotion/react */
 import styled from "@emotion/styled";
-import { Button, Text, Tooltip } from "@chakra-ui/react";
+import { Button, Tooltip } from "@chakra-ui/react";
 import { FiCompass } from "react-icons/fi"; // 나침반 아이콘
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 // Tmapv2 네임스페이스를 선언
 declare global {
@@ -42,72 +42,9 @@ const TMapPedestrianRoute = () => {
         setCenterCoords({ lat: center.lat(), lng: center.lng() });
       });
     }
-  }, []);
+  }, [centerCoords.lat, centerCoords.lng]);
 
-  useEffect(() => {
-    if (startPoint && endPoint) {
-      calculateShortestRoute();
-    }
-  }, [startPoint, endPoint]);
-
-  const handleStartSelection = () => {
-    setStartPoint(centerCoords);
-    setDistance(null);
-    setEstimatedTime(null);
-
-    if (startMarkerRef.current) {
-      startMarkerRef.current.setMap(null);
-    }
-
-    startMarkerRef.current = new window.Tmapv2.Marker({
-      position: new window.Tmapv2.LatLng(centerCoords.lat, centerCoords.lng),
-      icon: "https://img.icons8.com/emoji/48/000000/triangular-flag.png",
-      map: mapRef.current,
-    });
-  };
-
-  const handleEndSelection = () => {
-    setEndPoint(centerCoords);
-
-    if (endMarkerRef.current) {
-      endMarkerRef.current.setMap(null);
-    }
-
-    endMarkerRef.current = new window.Tmapv2.Marker({
-      position: new window.Tmapv2.LatLng(centerCoords.lat, centerCoords.lng),
-      icon: "https://img.icons8.com/emoji/48/000000/triangular-flag.png",
-      map: mapRef.current,
-    });
-  };
-
-  const handleGetCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setCenterCoords({ lat: latitude, lng: longitude });
-
-          // 지도의 중심을 사용자 위치로 이동
-          mapRef.current.setCenter(
-            new window.Tmapv2.LatLng(latitude, longitude)
-          );
-
-          // 모달 창을 1.5초간 띄우기
-          setIsModalVisible(true);
-          setTimeout(() => {
-            setIsModalVisible(false);
-          }, 1500);
-        },
-        (error) => {
-          console.error("Error fetching location:", error);
-        }
-      );
-    } else {
-      console.error("Geolocation is not supported by this browser.");
-    }
-  };
-
-  const calculateShortestRoute = async () => {
+  const calculateShortestRoute = useCallback(async () => {
     if (!startPoint || !endPoint) return;
 
     const url = "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1";
@@ -183,6 +120,67 @@ const TMapPedestrianRoute = () => {
     } catch (error) {
       console.error("Failed to calculate route", error);
     }
+  }, [startPoint, endPoint]);
+
+  useEffect(() => {
+    if (startPoint && endPoint) {
+      calculateShortestRoute();
+    }
+  }, [startPoint, endPoint, calculateShortestRoute]);
+
+  const handleStartSelection = () => {
+    setStartPoint(centerCoords);
+    setDistance(null);
+    setEstimatedTime(null);
+
+    if (startMarkerRef.current) {
+      startMarkerRef.current.setMap(null);
+    }
+
+    startMarkerRef.current = new window.Tmapv2.Marker({
+      position: new window.Tmapv2.LatLng(centerCoords.lat, centerCoords.lng),
+      icon: "https://img.icons8.com/emoji/48/000000/triangular-flag.png",
+      map: mapRef.current,
+    });
+  };
+
+  const handleEndSelection = () => {
+    setEndPoint(centerCoords);
+
+    if (endMarkerRef.current) {
+      endMarkerRef.current.setMap(null);
+    }
+
+    endMarkerRef.current = new window.Tmapv2.Marker({
+      position: new window.Tmapv2.LatLng(centerCoords.lat, centerCoords.lng),
+      icon: "https://img.icons8.com/emoji/48/000000/triangular-flag.png",
+      map: mapRef.current,
+    });
+  };
+
+  const handleGetCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCenterCoords({ lat: latitude, lng: longitude });
+
+          mapRef.current.setCenter(
+            new window.Tmapv2.LatLng(latitude, longitude)
+          );
+
+          setIsModalVisible(true);
+          setTimeout(() => {
+            setIsModalVisible(false);
+          }, 1500);
+        },
+        (error) => {
+          console.error("Error fetching location:", error);
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+    }
   };
 
   return (
@@ -190,7 +188,6 @@ const TMapPedestrianRoute = () => {
       <div id="map_div"></div>
       <CenterDot />
 
-      {/* 모달 창 */}
       {isModalVisible && <Modal>현재 사용자 위치로 커서를 이동합니다.</Modal>}
 
       <InfoBox>
@@ -215,7 +212,6 @@ const TMapPedestrianRoute = () => {
         </p>
       </LocationBox>
 
-      {/* 돋보기 버튼을 LocationBox 바로 아래에 배치 */}
       <Tooltip label="현재 위치로 이동" aria-label="현재 위치로 이동">
         <LocationButton onClick={handleGetCurrentLocation}>
           <FiCompass size={24} color="black" />
@@ -264,8 +260,7 @@ const InfoBox = styled.div`
   padding: 10px;
   border-radius: 8px;
   z-index: 1000;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 `;
 
 const LocationBox = styled.div`
@@ -276,24 +271,21 @@ const LocationBox = styled.div`
   padding: 10px;
   border-radius: 8px;
   z-index: 1000;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 `;
 
-// 현재 위치 찾기 버튼 (LocationButton)
 const LocationButton = styled(Button)`
   position: absolute;
-  top: 90px; /* LocationBox 아래로 위치 조정 */
+  top: 90px;
   left: 10px;
-  background-color: #EE82EE;
+  background-color: #ee82ee;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   padding: 20px;
   &:hover {
-    background-color: #BA55D3;
+    background-color: #ba55d3;
   }
 `;
 
-// 모달 창 스타일 정의
 const Modal = styled.div`
   position: absolute;
   top: 50%;
