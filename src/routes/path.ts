@@ -4,6 +4,7 @@ export const RouterPath = {
     login: '/login',
     signup: '/signup',
     mypage: '/mypage',
+    directions: '/directions'
   };
   
   export const getDynamicPath = {
