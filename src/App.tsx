@@ -17,7 +17,7 @@ const App = () => {
 
 // 페이지 전체를 감싸는 컨테이너
 const PageContainer = styled.div`
-  background-color: #f0f0f0; /* 바깥 배경색 변경 */
+  background-color: #D9D9D9; /* 바깥 배경색 변경 */
   width: 100%;
   min-height: 100vh; /* 화면 전체를 채우도록 설정 */
 `;
