@@ -216,7 +216,7 @@ const TMapPedestrianRoute = () => {
             : "미설정"}
         </p>
                 {/* 현재 위치 찾기 버튼 */}
-                <Tooltip label="현재 위치 보여주기" aria-label="현재 위치 보여주기">
+                <Tooltip label="현재 위치로 이동" aria-label="현재 위치로 이동">
           <Button
             onClick={handleGetCurrentLocation}
             bg="transparent"
