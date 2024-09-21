@@ -106,12 +106,12 @@ const StyledModalContent = styled(ModalContent)`
   /* 반응형 크기 설정: 모바일과 데스크탑 */
   @media (max-width: 768px) {
     width: 90%; /* 모바일: 너비 90% */
-    height: 50%; /* 모바일: 높이 50% */
+    height: 70%; /* 모바일: 높이 70% */
   }
 
   @media (min-width: 769px) {
-    width: 700px; /* 데스크탑: 너비 600px */
-    height: 400px; /* 데스크탑: 높이 500px */
+    width: 700px; /* 데스크탑: 너비 700px */
+    height: 400px; /* 데스크탑: 높이 400px */
   }
 `;
 
