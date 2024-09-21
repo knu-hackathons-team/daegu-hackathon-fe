@@ -1,4 +1,3 @@
-import React, { useEffect } from 'react';
 import { Button, VStack, Text } from '@chakra-ui/react';
 
 const LoginPage = () => {
