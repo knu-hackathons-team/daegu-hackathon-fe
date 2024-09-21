@@ -53,10 +53,4 @@ const NavButton = styled.button`
   }
 `;
 
-const IconWrapper = styled.div`
-  margin-right: 8px;
-  display: flex;
-  align-items: center;
-`;
-
 export default Navigation;

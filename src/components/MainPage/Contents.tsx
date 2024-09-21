@@ -41,8 +41,8 @@ const getRandomColor = (): string => {
 };
 
 // 6시부터 21시까지 (1시간 단위)
-const timetableStructure = Array.from({ length: 16 }, (_, i) => ({
-  time: `${i + 6}시`,
+const timetableStructure = Array.from({ length: 10 }, (_, i) => ({
+  time: `${i + 9}시`,
   mon: null as CourseType | null,
   tue: null as CourseType | null,
   wed: null as CourseType | null,
