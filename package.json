@@ -41,7 +41,8 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "test": "craco test"
+    "test": "craco test",
+    "dev": "cross-env NODE_ENV=development craco start"
   },
   "eslintConfig": {
     "extends": [
@@ -62,6 +63,7 @@
     ]
   },
   "devDependencies": {
-    "craco-alias": "^3.0.1"
+    "craco-alias": "^3.0.1",
+    "cross-env": "^7.0.3"
   }
 }
