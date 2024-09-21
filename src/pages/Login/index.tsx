@@ -18,15 +18,8 @@ const LoginPage = () => {
   const handleKakaoLogin = () => {
     if (typeof window !== 'undefined' && window.Kakao) {
       const { Kakao } = window as any;
-      Kakao.Auth.login({
-        success: (authObj: any) => {
-          console.log(authObj);
-          alert('로그인 성공');
-        },
-        fail: (err: any) => {
-          console.error(err);
-          alert('로그인 실패');
-        },
+      Kakao.Auth.authorize({
+        redirectUri: 'http://{기영이가 열고있는 프론트엔드 서버 주소}/token.html', // 로그인 성공 시 리다이렉트될 URL
       });
     }
   };

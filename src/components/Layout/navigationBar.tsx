@@ -65,7 +65,7 @@ export const Navigation: React.FC = () => {
 const Wrapper = styled.footer`
   width: 100%;
   height: 60px;
-  background-color: #ffe5ec; /* 연한 핑크색 배경 */
+  background-color: #f5f5f5; /* 연한 핑크색 배경 */
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -81,7 +81,7 @@ const NavItemWrapper = styled.div`
 
 const NavItem = styled(Link)<{ active: boolean }>`
   text-decoration: none;
-  color: ${({ active }) => (active ? "#fff" : "#ff66b2")}; /* 활성화 시 흰색, 비활성화 시 진한 핑크 */
+  color: ${({ active }) => (active ? "#fff" : "#2b2b2b")}; /* 활성화 시 흰색, 비활성화 시 밝은 회색 */
   font-size: 16px;
   font-family: "Inter", sans-serif;
   position: relative;
@@ -95,12 +95,13 @@ const ActiveBackground = styled.div<{ left: number; width: number }>`
   top: 50%; /* 수직 중앙 정렬 */
   transform: translateY(-50%);
   left: ${({ left }) => `${left}px`}; /* 텍스트 좌우 중앙에 맞게 위치 */
-  width: ${({ width }) => `${width}px`}; /* 타원의 너비는 텍스트 길이*/
+  width: ${({ width }) => `${width}px`}; /* 타원의 너비는 텍스트 길이 */
   height: 40px;
-  background-color: #ff66b2; /* 진한 핑크색 */
+  background-color: #2b2b2b; /* 진한 회색 (활성화 시 배경색) */
   border-radius: 20px; /* 타원 형태 */
   z-index: 1;
   transition: all 0.5s ease; /* 부드럽게 움직이는 애니메이션 */
 `;
+
 
 export default Navigation;
