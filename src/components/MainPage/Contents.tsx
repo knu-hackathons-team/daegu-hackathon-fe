@@ -79,13 +79,32 @@ export const Contents = () => {
           color: getRandomColor(), // 랜덤 색상 추가
         }));
         setCourses(data); // 받아온 과목 데이터를 상태에 저장
-      } catch (error) {
+        console.log("과목 데이터를 성공적으로 받아왔습니다:", data);
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+          // Axios 에러인 경우 처리
+          if (error.response) {
+            // 서버가 응답을 했으나, 상태 코드가 범위 밖일 때
+            console.log("응답 오류:", error.response.status);
+            console.log("응답 데이터:", error.response.data);
+          } else if (error.request) {
+            // 요청이 서버에 도달하지 못했을 때
+            console.log("요청 오류:", error.request);
+          } else {
+            // 그 외 오류
+            console.log("에러 메시지:", error.message);
+          }
+        } else {
+          // Axios 에러가 아닌 경우 처리
+          console.error("알 수 없는 에러:", error);
+        }
         console.error("과목 데이터를 받아오는 중 오류가 발생했습니다.", error);
       }
     };
-
+  
     fetchData();
   }, []);
+  
 
   // 과목 검색 기능
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -240,7 +259,11 @@ export const Contents = () => {
           </TimetableGrid>
         </Header>
       </TimetableWrapper>
-      <ModalComponent isOpen={isModalOpen} onClose={closeModal} selectedDay={selectedDay} />
+      <ModalComponent
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        selectedDay={selectedDay}
+      />
     </Box>
   );
 };
@@ -264,14 +287,6 @@ const Course = ({
     )}
   </CourseBox>
 );
-
-const Wrapper = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-`;
 
 const TimetableWrapper = styled.div`
   width: 100%;
@@ -328,3 +343,4 @@ const CourseBox = styled(Box)`
   text-align: center;
   box-sizing: border-box;
 `;
+
