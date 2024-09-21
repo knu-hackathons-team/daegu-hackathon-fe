@@ -1,7 +1,14 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import styled from "@emotion/styled";
-import { Box, Input, Button, Text, VStack, HStack } from "@chakra-ui/react";
+import {
+  Box,
+  Input,
+  Button,
+  Text,
+  VStack,
+  HStack,
+} from "@chakra-ui/react";
 import ModalComponent from "./ModalComponent";
 
 // 과목 타입 정의
@@ -101,10 +108,9 @@ export const Contents = () => {
         console.error("과목 데이터를 받아오는 중 오류가 발생했습니다.", error);
       }
     };
-  
+
     fetchData();
   }, []);
-  
 
   // 과목 검색 기능
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,8 +169,8 @@ export const Contents = () => {
   };
 
   return (
-    <Box>
-      <Box bg="gray.100" p={4} borderRadius="md">
+    <Box bg = 'white' height="100vh" marginBottom="-59.5px">
+      <Box bg="gray.100" p={5} borderRadius="md">
         <Input
           placeholder="과목명 검색"
           value={searchTerm}
@@ -291,8 +297,7 @@ const Course = ({
 const TimetableWrapper = styled.div`
   width: 100%;
   background-color: white;
-  border: 1px solid #ccc;
-  padding: 10px;
+  padding: 15px;
 `;
 
 const Header = styled.div`
@@ -343,4 +348,3 @@ const CourseBox = styled(Box)`
   text-align: center;
   box-sizing: border-box;
 `;
-

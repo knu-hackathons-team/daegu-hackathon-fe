@@ -250,6 +250,7 @@ const Wrapper = styled.div`
   width: 100%;
   height: 100vh;
   position: relative;
+  margin-bottom: -59.5px;
 `;
 
 const InfoBox = styled.div`

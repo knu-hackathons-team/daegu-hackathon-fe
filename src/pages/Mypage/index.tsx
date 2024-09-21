@@ -28,6 +28,8 @@ const Wrapper = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: #ffffff;
+  margin-bottom: -59.5px;
 `;
 
 export default Mypage;
