@@ -72,7 +72,7 @@ export const Contents = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "http://13.124.25.138:8080/api/subject"
+          "http://giftshop-kakao.shop:8080/api/subject/search"
         );
         const data = response.data.subjects.map((subject: any) => ({
           ...subject,

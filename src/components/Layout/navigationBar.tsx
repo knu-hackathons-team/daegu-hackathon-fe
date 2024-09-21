@@ -1,10 +1,9 @@
 import React, { useState, useRef, useLayoutEffect } from "react";
 import styled from "@emotion/styled";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export const Navigation: React.FC = () => {
   const [active, setActive] = useState("/"); // 현재 활성화된 경로 추적
-  const location = useLocation();
   const [activeWidth, setActiveWidth] = useState(0);
   const [activeLeft, setActiveLeft] = useState(0);
   const directionsRef = useRef<HTMLDivElement>(null);
@@ -36,7 +35,7 @@ export const Navigation: React.FC = () => {
           active={active === "/directions"}
           onClick={() => setActive("/directions")}
         >
-          지도탐색
+          길찾기
         </NavItem>
       </NavItemWrapper>
       <NavItemWrapper ref={scheduleRef}>
@@ -97,7 +96,7 @@ const ActiveBackground = styled.div<{ left: number; width: number }>`
   left: ${({ left }) => `${left}px`}; /* 텍스트 좌우 중앙에 맞게 위치 */
   width: ${({ width }) => `${width}px`}; /* 타원의 너비는 텍스트 길이 */
   height: 40px;
-  background-color: #2b2b2b; /* 진한 회색 (활성화 시 배경색) */
+  background-color: #52586A; /* 진한 회색 (활성화 시 배경색) */
   border-radius: 20px; /* 타원 형태 */
   z-index: 1;
   transition: all 0.5s ease; /* 부드럽게 움직이는 애니메이션 */

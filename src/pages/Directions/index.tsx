@@ -255,7 +255,7 @@ const Wrapper = styled.div`
 const InfoBox = styled.div`
   position: absolute;
   top: 10px;
-  right: 50px;
+  right: 10px;
   background-color: white;
   padding: 10px;
   border-radius: 8px;
