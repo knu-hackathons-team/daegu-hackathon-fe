@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import styled from "@emotion/styled";
 import { Box, Input, Button, Text, VStack, HStack } from "@chakra-ui/react";
 
@@ -10,6 +11,7 @@ interface CourseType {
   startHour: number; // 시작 시간 (예: 9.5는 9시 30분)
   finalHour: number; // 종료 시간
   color: string; // 배경색을 위한 색상
+  partial?: "top" | "bottom" | "full"; // 반틈만 색칠될 때를 위한 속성
 }
 
 // 랜덤 색상 생성 함수
@@ -31,39 +33,29 @@ const timetableStructure = Array.from({ length: 16 }, (_, i) => ({
   fri: null as CourseType | null,
 }));
 
-// 초기 과목 정보 (예시)
-const initialCourses: CourseType[] = [
-  {
-    name: "국어와 매체언어",
-    location: "산격동 캠퍼스 인문대학101",
-    code: "CLTR0001-001",
-    startHour: 9.0,
-    finalHour: 13.0,
-    color: getRandomColor(),
-  },
-  {
-    name: "고급 프로그래밍",
-    location: "산격동 캠퍼스 IT대학201",
-    code: "COMP2001-002",
-    startHour: 10.0,
-    finalHour: 12.0,
-    color: getRandomColor(),
-  },
-  {
-    name: "데이터베이스 개론",
-    location: "산격동 캠퍼스 IT대학305",
-    code: "COMP3001-003",
-    startHour: 13.5, // 13시 30분
-    finalHour: 16.0,
-    color: getRandomColor(),
-  },
-];
-
 export const Contents = () => {
-  const [courses, setCourses] = useState<CourseType[]>(initialCourses); // 초기 과목 데이터
+  const [courses, setCourses] = useState<CourseType[]>([]); // 백엔드에서 받아올 과목 데이터
   const [timetable, setTimetable] = useState(timetableStructure);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredCourses, setFilteredCourses] = useState<CourseType[]>([]);
+
+  // 서버로부터 과목 데이터를 받아오는 함수
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('http://13.124.25.138:8080/api/subject');
+        const data = response.data.subjects.map((subject: any) => ({
+          ...subject,
+          color: getRandomColor(), // 랜덤 색상 추가
+        }));
+        setCourses(data); // 받아온 과목 데이터를 상태에 저장
+      } catch (error) {
+        console.error("과목 데이터를 받아오는 중 오류가 발생했습니다.", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // 과목 검색 기능
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,11 +79,11 @@ export const Contents = () => {
           const timeSlot = newTimetable[slotIndex];
           // 처음 시작 시간과 마지막 시간을 위한 절반 칸 처리
           if (slotIndex === startSlot && course.startHour % 1 !== 0) {
-            timeSlot[day] = { ...course, partial: "bottom" } as any;  // 시작 시간이 30분일 때
+            timeSlot[day] = { ...course, partial: "bottom" };  // 시작 시간이 30분일 때
           } else if (slotIndex === endSlot - 1 && course.finalHour % 1 !== 0) {
-            timeSlot[day] = { ...course, partial: "top" } as any; // 종료 시간이 30분일 때
+            timeSlot[day] = { ...course, partial: "top" }; // 종료 시간이 30분일 때
           } else {
-            timeSlot[day] = { ...course, partial: "full" } as any; // 전체 칸 채우기
+            timeSlot[day] = { ...course, partial: "full" }; // 전체 칸 채우기
           }
         }
       }
@@ -102,7 +94,7 @@ export const Contents = () => {
 
   // 각 수업이 시간표에 어떻게 표시될지 결정하는 함수
   const getSlotStyle = (course: CourseType, hour: number) => {
-    const partial = (course as any).partial; // 'partial'은 동적으로 추가된 속성이므로 타입을 any로 처리
+    const partial = course.partial; // 'partial' 속성으로 절반 색칠 여부 결정
     if (partial === "bottom") {
       return { height: "50%", backgroundColor: course.color, alignSelf: "flex-end" }; // 시작 시간의 절반만 색칠
     } else if (partial === "top") {
@@ -123,20 +115,23 @@ export const Contents = () => {
           onChange={handleSearch}
           bg="white"
         />
-        <VStack align="stretch" mt={2}>
-          {filteredCourses.map((course, index) => (
-            <HStack key={index} justify="space-between" bg="gray.200" p={2} borderRadius="md">
-              <Box>
-                <strong>{course.name}</strong>
-                <br />
-                <small>{course.location}</small>
-              </Box>
-              <Button size="sm" onClick={() => addCourseToTimetable(course, "mon")}>
-                추가
-              </Button>
-            </HStack>
-          ))}
-        </VStack>
+        {/* 검색어가 비어있지 않을 때만 VStack을 보여줌 */}
+        {searchTerm && (
+          <VStack align="stretch" mt={2}>
+            {filteredCourses.map((course, index) => (
+              <HStack key={index} justify="space-between" bg="gray.200" p={2} borderRadius="md">
+                <Box>
+                  <strong>{course.name}</strong>
+                  <br />
+                  <small>{course.location}</small>
+                </Box>
+                <Button size="sm" onClick={() => addCourseToTimetable(course, "mon")}>
+                  추가
+                </Button>
+              </HStack>
+            ))}
+          </VStack>
+        )}
       </Box>
 
       <TimetableWrapper>
@@ -155,19 +150,19 @@ export const Contents = () => {
               <>
                 <TimeSlot key={`time-${index}`}>{slot.time}</TimeSlot>
                 <DaySlot>
-                  {slot.mon && <Course style={getSlotStyle(slot.mon, index + 6)} {...slot.mon} />}
+                  {slot.mon && <Course style={getSlotStyle(slot.mon, index + 6)} course={slot.mon} />}
                 </DaySlot>
                 <DaySlot>
-                  {slot.tue && <Course style={getSlotStyle(slot.tue, index + 6)} {...slot.tue} />}
+                  {slot.tue && <Course style={getSlotStyle(slot.tue, index + 6)} course={slot.tue} />}
                 </DaySlot>
                 <DaySlot>
-                  {slot.wed && <Course style={getSlotStyle(slot.wed, index + 6)} {...slot.wed} />}
+                  {slot.wed && <Course style={getSlotStyle(slot.wed, index + 6)} course={slot.wed} />}
                 </DaySlot>
                 <DaySlot>
-                  {slot.thu && <Course style={getSlotStyle(slot.thu, index + 6)} {...slot.thu} />}
+                  {slot.thu && <Course style={getSlotStyle(slot.thu, index + 6)} course={slot.thu} />}
                 </DaySlot>
                 <DaySlot>
-                  {slot.fri && <Course style={getSlotStyle(slot.fri, index + 6)} {...slot.fri} />}
+                  {slot.fri && <Course style={getSlotStyle(slot.fri, index + 6)} course={slot.fri} />}
                 </DaySlot>
               </>
             ))}
@@ -179,12 +174,16 @@ export const Contents = () => {
 };
 
 // 과목 컴포넌트
-const Course = ({ name, location, style }: { name: string; location: string; style: React.CSSProperties }) => (
+const Course = ({ course, style }: { course: CourseType; style: React.CSSProperties }) => (
   <CourseBox style={style}>
-    <Text fontSize="sm" fontWeight="bold">
-      {name}
-    </Text>
-    <Text fontSize="xs">{location}</Text>
+    {course.partial === "full" && (
+      <>
+        <Text fontSize="sm" fontWeight="bold">
+          {course.name}
+        </Text>
+        <Text fontSize="xs">{course.location}</Text>
+      </>
+    )}
   </CourseBox>
 );
 
