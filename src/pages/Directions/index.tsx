@@ -75,7 +75,7 @@ const TMapPedestrianRoute = () => {
 
     endMarkerRef.current = new window.Tmapv2.Marker({
       position: new window.Tmapv2.LatLng(centerCoords.lat, centerCoords.lng),
-      icon: "https://img.icons8.com/emoji/48/000000/checkered-flag.png",
+      icon: "https://img.icons8.com/emoji/48/000000/triangular-flag.png",
       map: mapRef.current,
     });
 
@@ -184,7 +184,8 @@ const TMapPedestrianRoute = () => {
         <p>위도: {centerCoords.lat.toFixed(6)}</p>
         <p>경도: {centerCoords.lng.toFixed(6)}</p>
         {distance && <p>거리: {distance} km</p>}
-        {estimatedTime && <p>예상 이동 시간: {estimatedTime * 1.5} 분</p>}
+        {/*거동불편자 이동거리는 TMAP에서 반환하는 이동예상 시간에 1.5를 곱해줬음*/}
+        {estimatedTime && <p>예상 이동시간: {estimatedTime * 1.5} 분</p>} 
       </InfoBox>
 
       <LocationBox>
