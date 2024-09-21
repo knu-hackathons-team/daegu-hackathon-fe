@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import styled from "@emotion/styled";
 import { Box, Input, Button, Text, VStack, HStack } from "@chakra-ui/react";
+import ModalComponent from "./ModalComponent";
 
 // 과목 타입 정의
 interface CourseType {
@@ -17,8 +18,24 @@ interface CourseType {
 // 랜덤 색상 생성 함수
 const getRandomColor = (): string => {
   const colors = [
-    "#FFCDD2", "#F8BBD0", "#E1BEE7", "#D1C4E9", "#C5CAE9", "#BBDEFB", "#B3E5FC", "#B2EBF2", "#B2DFDB", "#C8E6C9",
-    "#DCEDC8", "#F0F4C3", "#FFF9C4", "#FFECB3", "#FFE0B2", "#FFCCBC", "#D7CCC8", "#CFD8DC"
+    "#FFCDD2",
+    "#F8BBD0",
+    "#E1BEE7",
+    "#D1C4E9",
+    "#C5CAE9",
+    "#BBDEFB",
+    "#B3E5FC",
+    "#B2EBF2",
+    "#B2DFDB",
+    "#C8E6C9",
+    "#DCEDC8",
+    "#F0F4C3",
+    "#FFF9C4",
+    "#FFECB3",
+    "#FFE0B2",
+    "#FFCCBC",
+    "#D7CCC8",
+    "#CFD8DC",
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 };
@@ -38,12 +55,25 @@ export const Contents = () => {
   const [timetable, setTimetable] = useState(timetableStructure);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredCourses, setFilteredCourses] = useState<CourseType[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<string>("");
+
+  const openModal = (day: string) => {
+    setSelectedDay(day);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
 
   // 서버로부터 과목 데이터를 받아오는 함수
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://13.124.25.138:8080/api/subject');
+        const response = await axios.get(
+          "http://13.124.25.138:8080/api/subject"
+        );
         const data = response.data.subjects.map((subject: any) => ({
           ...subject,
           color: getRandomColor(), // 랜덤 색상 추가
@@ -68,7 +98,10 @@ export const Contents = () => {
   };
 
   // 시간표에 과목 추가하는 함수
-  const addCourseToTimetable = (course: CourseType, day: "mon" | "tue" | "wed" | "thu" | "fri") => {
+  const addCourseToTimetable = (
+    course: CourseType,
+    day: "mon" | "tue" | "wed" | "thu" | "fri"
+  ) => {
     setTimetable((prev) => {
       const newTimetable = [...prev];
       const startSlot = Math.floor(course.startHour) - 6; // 시간표 시작이 6시
@@ -79,7 +112,7 @@ export const Contents = () => {
           const timeSlot = newTimetable[slotIndex];
           // 처음 시작 시간과 마지막 시간을 위한 절반 칸 처리
           if (slotIndex === startSlot && course.startHour % 1 !== 0) {
-            timeSlot[day] = { ...course, partial: "bottom" };  // 시작 시간이 30분일 때
+            timeSlot[day] = { ...course, partial: "bottom" }; // 시작 시간이 30분일 때
           } else if (slotIndex === endSlot - 1 && course.finalHour % 1 !== 0) {
             timeSlot[day] = { ...course, partial: "top" }; // 종료 시간이 30분일 때
           } else {
@@ -96,7 +129,11 @@ export const Contents = () => {
   const getSlotStyle = (course: CourseType, hour: number) => {
     const partial = course.partial; // 'partial' 속성으로 절반 색칠 여부 결정
     if (partial === "bottom") {
-      return { height: "50%", backgroundColor: course.color, alignSelf: "flex-end" }; // 시작 시간의 절반만 색칠
+      return {
+        height: "50%",
+        backgroundColor: course.color,
+        alignSelf: "flex-end",
+      }; // 시작 시간의 절반만 색칠
     } else if (partial === "top") {
       return { height: "50%", backgroundColor: course.color }; // 종료 시간의 절반만 색칠
     } else if (partial === "full") {
@@ -119,13 +156,22 @@ export const Contents = () => {
         {searchTerm && (
           <VStack align="stretch" mt={2}>
             {filteredCourses.map((course, index) => (
-              <HStack key={index} justify="space-between" bg="gray.200" p={2} borderRadius="md">
+              <HStack
+                key={index}
+                justify="space-between"
+                bg="gray.200"
+                p={2}
+                borderRadius="md"
+              >
                 <Box>
                   <strong>{course.name}</strong>
                   <br />
                   <small>{course.location}</small>
                 </Box>
-                <Button size="sm" onClick={() => addCourseToTimetable(course, "mon")}>
+                <Button
+                  size="sm"
+                  onClick={() => addCourseToTimetable(course, "mon")}
+                >
                   추가
                 </Button>
               </HStack>
@@ -136,45 +182,77 @@ export const Contents = () => {
 
       <TimetableWrapper>
         <Header>
-          <Text>시간표</Text>
+          <Text>00님의 시간표</Text>
           <GridHeader>
             <div></div> {/* 빈 칸 (시간 부분) */}
-            <div>월</div>
-            <div>화</div>
-            <div>수</div>
-            <div>목</div>
-            <div>금</div>
+            <div onClick={() => openModal("월")}>월</div>
+            <div onClick={() => openModal("화")}>화</div>
+            <div onClick={() => openModal("수")}>수</div>
+            <div onClick={() => openModal("목")}>목</div>
+            <div onClick={() => openModal("금")}>금</div>
           </GridHeader>
           <TimetableGrid>
             {timetable.map((slot, index) => (
               <>
                 <TimeSlot key={`time-${index}`}>{slot.time}</TimeSlot>
                 <DaySlot>
-                  {slot.mon && <Course style={getSlotStyle(slot.mon, index + 6)} course={slot.mon} />}
+                  {slot.mon && (
+                    <Course
+                      style={getSlotStyle(slot.mon, index + 6)}
+                      course={slot.mon}
+                    />
+                  )}
                 </DaySlot>
                 <DaySlot>
-                  {slot.tue && <Course style={getSlotStyle(slot.tue, index + 6)} course={slot.tue} />}
+                  {slot.tue && (
+                    <Course
+                      style={getSlotStyle(slot.tue, index + 6)}
+                      course={slot.tue}
+                    />
+                  )}
                 </DaySlot>
                 <DaySlot>
-                  {slot.wed && <Course style={getSlotStyle(slot.wed, index + 6)} course={slot.wed} />}
+                  {slot.wed && (
+                    <Course
+                      style={getSlotStyle(slot.wed, index + 6)}
+                      course={slot.wed}
+                    />
+                  )}
                 </DaySlot>
                 <DaySlot>
-                  {slot.thu && <Course style={getSlotStyle(slot.thu, index + 6)} course={slot.thu} />}
+                  {slot.thu && (
+                    <Course
+                      style={getSlotStyle(slot.thu, index + 6)}
+                      course={slot.thu}
+                    />
+                  )}
                 </DaySlot>
                 <DaySlot>
-                  {slot.fri && <Course style={getSlotStyle(slot.fri, index + 6)} course={slot.fri} />}
+                  {slot.fri && (
+                    <Course
+                      style={getSlotStyle(slot.fri, index + 6)}
+                      course={slot.fri}
+                    />
+                  )}
                 </DaySlot>
               </>
             ))}
           </TimetableGrid>
         </Header>
       </TimetableWrapper>
+      <ModalComponent isOpen={isModalOpen} onClose={closeModal} selectedDay={selectedDay} />
     </Box>
   );
 };
 
 // 과목 컴포넌트
-const Course = ({ course, style }: { course: CourseType; style: React.CSSProperties }) => (
+const Course = ({
+  course,
+  style,
+}: {
+  course: CourseType;
+  style: React.CSSProperties;
+}) => (
   <CourseBox style={style}>
     {course.partial === "full" && (
       <>
@@ -209,7 +287,7 @@ const Header = styled.div`
 
 const GridHeader = styled.div`
   display: grid;
-  grid-template-columns: 100px repeat(5, 1fr); /* 시간 칸 하나와 요일 5개 */
+  grid-template-columns: 70px repeat(5, 1fr); /* 시간 칸 하나와 요일 5개 */
   padding: 10px;
   font-weight: bold;
   text-align: center;
@@ -217,8 +295,8 @@ const GridHeader = styled.div`
 
 const TimetableGrid = styled.div`
   display: grid;
-  grid-template-columns: 100px repeat(5, 1fr); /* 시간 칸 하나와 요일 5개 */
-  grid-auto-rows: 80px; /* 각 시간 칸 높이 설정 */
+  grid-template-columns: 70px repeat(5, 1fr); /* 시간 칸 하나와 요일 5개 */
+  grid-auto-rows: 50px; /* 각 시간 칸 높이 설정 */
   gap: 1px; /* 칸 사이의 간격 */
 `;
 
