@@ -10,8 +10,6 @@ export const Navigation: React.FC = () => {
           시간표
         </NavButton>
       </Link>
-
-      {/* NavButton을 Link로 감싸서 사용 */}
       <Link to="/mypage" style={{ textDecoration: "none" }}>
         <NavButton>
           내정보
