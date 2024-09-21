@@ -1,17 +1,11 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { RouterPath } from './path';
-import { Layout } from '@/components/Layout';
-import { MainPage } from '@/pages/Main';
-import MyPage from '@/pages/Mypage';
-import Login from '@/pages/Login';
-import Directions from '@/pages/Directions';
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { RouterPath } from "./path";
+import { Layout } from "@/components/Layout";
+import { MainPage } from "@/pages/Main";
+import MyPage from "@/pages/Mypage";
+import Directions from "@/pages/Directions";
 
 const router = createBrowserRouter([
-  // Login route without Layout
-  {
-    path: RouterPath.login,
-    element: <Login />,
-  },
   // Routes with Layout
   {
     path: RouterPath.root,

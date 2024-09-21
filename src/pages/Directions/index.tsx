@@ -318,7 +318,7 @@ const Modal = styled.div`
 
 const ButtonWrapper = styled.div`
   position: absolute;
-  bottom: 80px;
+  bottom: 140px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
