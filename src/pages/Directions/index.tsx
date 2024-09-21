@@ -1,6 +1,6 @@
 /** @jsxImportSource @emotion/react */
 import styled from "@emotion/styled";
-import { Button, Flex, Text, Tooltip } from "@chakra-ui/react";
+import { Button, Text, Tooltip } from "@chakra-ui/react";
 import { FiCompass } from "react-icons/fi"; // 나침반 아이콘
 import React, { useEffect, useState, useRef } from "react";
 
@@ -20,6 +20,7 @@ const TMapPedestrianRoute = () => {
   const [endPoint, setEndPoint] = useState<any>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [estimatedTime, setEstimatedTime] = useState<number | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false); // 모달 상태 추가
   const mapRef = useRef<any>(null);
   const polylineRef = useRef<any>(null);
   const startMarkerRef = useRef<any>(null);
@@ -43,7 +44,6 @@ const TMapPedestrianRoute = () => {
     }
   }, []);
 
-  // 출발지와 도착지가 모두 설정된 경우 경로 계산 실행
   useEffect(() => {
     if (startPoint && endPoint) {
       calculateShortestRoute();
@@ -64,8 +64,6 @@ const TMapPedestrianRoute = () => {
       icon: "https://img.icons8.com/emoji/48/000000/triangular-flag.png",
       map: mapRef.current,
     });
-
-    console.log("Start Point selected:", centerCoords);
   };
 
   const handleEndSelection = () => {
@@ -80,21 +78,25 @@ const TMapPedestrianRoute = () => {
       icon: "https://img.icons8.com/emoji/48/000000/triangular-flag.png",
       map: mapRef.current,
     });
-
-    console.log("End Point selected:", centerCoords);
   };
 
-  // 현재 위치 받아오기
   const handleGetCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          console.log("User location:", latitude, longitude);
           setCenterCoords({ lat: latitude, lng: longitude });
 
           // 지도의 중심을 사용자 위치로 이동
-          mapRef.current.setCenter(new window.Tmapv2.LatLng(latitude, longitude));
+          mapRef.current.setCenter(
+            new window.Tmapv2.LatLng(latitude, longitude)
+          );
+
+          // 모달 창을 1.5초간 띄우기
+          setIsModalVisible(true);
+          setTimeout(() => {
+            setIsModalVisible(false);
+          }, 1500);
         },
         (error) => {
           console.error("Error fetching location:", error);
@@ -106,10 +108,7 @@ const TMapPedestrianRoute = () => {
   };
 
   const calculateShortestRoute = async () => {
-    if (!startPoint || !endPoint) {
-      console.log("출발지와 도착지 설정 안 됨");
-      return;
-    }
+    if (!startPoint || !endPoint) return;
 
     const url = "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1";
     const headers = {
@@ -189,19 +188,18 @@ const TMapPedestrianRoute = () => {
   return (
     <Wrapper>
       <div id="map_div"></div>
-      {/* 중앙 고정 빨간 점 */}
       <CenterDot />
 
-      {/* 우측 상단의 InfoBox에 현재 위치 버튼 추가 */}
+      {/* 모달 창 */}
+      {isModalVisible && <Modal>현재 사용자 위치로 커서를 이동합니다.</Modal>}
+
       <InfoBox>
         <p>위도: {centerCoords.lat.toFixed(6)}</p>
         <p>경도: {centerCoords.lng.toFixed(6)}</p>
         {distance && <p>거리: {distance} km</p>}
         {estimatedTime && <p>예상 이동시간: {estimatedTime * 1.5} 분</p>}
-        
       </InfoBox>
 
-      {/* 좌측 상단의 LocationBox */}
       <LocationBox>
         <p>
           출발지:{" "}
@@ -215,17 +213,14 @@ const TMapPedestrianRoute = () => {
             ? `${endPoint.lat.toFixed(6)}, ${endPoint.lng.toFixed(6)}`
             : "미설정"}
         </p>
-                {/* 현재 위치 찾기 버튼 */}
-                <Tooltip label="현재 위치로 이동" aria-label="현재 위치로 이동">
-          <Button
-            onClick={handleGetCurrentLocation}
-            bg="transparent"
-            _hover={{ bg: "gray.200" }}
-          >
-            <FiCompass size={24} color="black" />
-          </Button>
-        </Tooltip>
       </LocationBox>
+
+      {/* 돋보기 버튼을 LocationBox 바로 아래에 배치 */}
+      <Tooltip label="현재 위치로 이동" aria-label="현재 위치로 이동">
+        <LocationButton onClick={handleGetCurrentLocation}>
+          <FiCompass size={24} color="black" />
+        </LocationButton>
+      </Tooltip>
 
       <ButtonWrapper>
         <Button
@@ -254,6 +249,7 @@ const TMapPedestrianRoute = () => {
 
 export default TMapPedestrianRoute;
 
+// 스타일 정의
 const Wrapper = styled.div`
   width: 100%;
   height: 100vh;
@@ -264,20 +260,67 @@ const InfoBox = styled.div`
   position: absolute;
   top: 10px;
   right: 50px;
-  background-color: rgba(220, 220, 220, 0.8);
+  background-color: white;
   padding: 10px;
   border-radius: 8px;
   z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+
 `;
 
 const LocationBox = styled.div`
   position: absolute;
   top: 10px;
   left: 10px;
-  background-color: rgba(220, 220, 220, 0.8);
+  background-color: white;
   padding: 10px;
   border-radius: 8px;
   z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+
+`;
+
+// 현재 위치 찾기 버튼 (LocationButton)
+const LocationButton = styled(Button)`
+  position: absolute;
+  top: 90px; /* LocationBox 아래로 위치 조정 */
+  left: 10px;
+  background-color: #EE82EE;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  &:hover {
+    background-color: #BA55D3;
+  }
+`;
+
+// 모달 창 스타일 정의
+const Modal = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  z-index: 2000;
+  opacity: 0;
+  animation: fadeInOut 1.7s forwards;
+
+  @keyframes fadeInOut {
+    0% {
+      opacity: 0;
+    }
+    20% {
+      opacity: 1;
+    }
+    80% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
 `;
 
 const ButtonWrapper = styled.div`
