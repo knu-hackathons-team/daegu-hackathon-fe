@@ -1,5 +1,5 @@
 /** @jsxImportSource @emotion/react */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Contents } from "@/components/MainPage/Contents";
 import {
   Flex,
@@ -17,7 +17,17 @@ import {
 import styled from "@emotion/styled";
 
 export const MainPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false); // 초기 상태는 모달이 닫혀 있음
+
+  // 첫 접속 여부를 확인하는 함수
+  useEffect(() => {
+    const isFirstVisit = localStorage.getItem("firstVisit");
+    if (!isFirstVisit) {
+      // 첫 접속인 경우 localStorage에 저장하고 모달을 열어줌
+      localStorage.setItem("firstVisit", "false");
+      setIsModalOpen(true); // 첫 방문일 경우 모달 열기
+    }
+  }, []);
 
   // 카카오 로그인 버튼을 클릭했을 때 호출되는 함수
   const handleKakaoLogin = () => {
@@ -38,7 +48,7 @@ export const MainPage = () => {
       {/* 모달 */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => {}}
+        onClose={() => {}} // 닫기 기능 비활성화
         isCentered
         motionPreset="slideInBottom"
         blockScrollOnMount={false}
