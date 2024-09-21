@@ -6,23 +6,24 @@ import { Box, Input, Button, Text, VStack, HStack } from "@chakra-ui/react";
 interface CourseType {
   name: string;
   location: string;
-  color: string;
-  startHour: number; // 시작 시간 (시간대 단위)
-  duration: number; // 과목 길이 (15분 단위)
+  code: string;
+  startHour: number; // 시작 시간 (예: 9.5는 9시 30분)
+  finalHour: number; // 종료 시간
+  color: string; // 배경색을 위한 색상
 }
 
 // 랜덤 색상 생성 함수
 const getRandomColor = (): string => {
   const colors = [
-    "#FFCDD2", "#F8BBD0", "#E1BEE7", "#D1C4E9", "#C5CAE9", "#BBDEFB", "#B3E5FC", "#B2EBF2", "#B2DFDB", "#C8E6C9", 
+    "#FFCDD2", "#F8BBD0", "#E1BEE7", "#D1C4E9", "#C5CAE9", "#BBDEFB", "#B3E5FC", "#B2EBF2", "#B2DFDB", "#C8E6C9",
     "#DCEDC8", "#F0F4C3", "#FFF9C4", "#FFECB3", "#FFE0B2", "#FFCCBC", "#D7CCC8", "#CFD8DC"
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
-// 6시부터 21시까지 (15분 단위로 4*16 = 64칸)
-const timetableStructure = Array.from({ length: 64 }, (_, i) => ({
-  time: `${Math.floor(i / 4) + 6}시 ${(i % 4) * 15}분`,
+// 6시부터 21시까지 (1시간 단위)
+const timetableStructure = Array.from({ length: 16 }, (_, i) => ({
+  time: `${i + 6}시`,
   mon: null as CourseType | null,
   tue: null as CourseType | null,
   wed: null as CourseType | null,
@@ -30,65 +31,91 @@ const timetableStructure = Array.from({ length: 64 }, (_, i) => ({
   fri: null as CourseType | null,
 }));
 
+// 초기 과목 정보 (예시)
+const initialCourses: CourseType[] = [
+  {
+    name: "국어와 매체언어",
+    location: "산격동 캠퍼스 인문대학101",
+    code: "CLTR0001-001",
+    startHour: 9.0,
+    finalHour: 13.0,
+    color: getRandomColor(),
+  },
+  {
+    name: "고급 프로그래밍",
+    location: "산격동 캠퍼스 IT대학201",
+    code: "COMP2001-002",
+    startHour: 10.0,
+    finalHour: 12.0,
+    color: getRandomColor(),
+  },
+  {
+    name: "데이터베이스 개론",
+    location: "산격동 캠퍼스 IT대학305",
+    code: "COMP3001-003",
+    startHour: 13.5, // 13시 30분
+    finalHour: 16.0,
+    color: getRandomColor(),
+  },
+];
+
 export const Contents = () => {
+  const [courses, setCourses] = useState<CourseType[]>(initialCourses); // 초기 과목 데이터
   const [timetable, setTimetable] = useState(timetableStructure);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredCourses, setFilteredCourses] = useState<CourseType[]>([]);
-
-  // 과목 추가 함수
-  const addCourse = (
-    day: "mon" | "tue" | "wed" | "thu" | "fri",
-    course: CourseType
-  ) => {
-    setTimetable((prev) =>
-      prev.map((slot, index) =>
-        index >= (course.startHour - 6) * 4 &&
-        index < (course.startHour - 6) * 4 + course.duration
-          ? { ...slot, [day]: course }
-          : slot
-      )
-    );
-  };
-
-  // 예시 과목 추가
-  const handleAddCourse = () => {
-    addCourse("mon", {
-      name: "데이터베이스",
-      location: "IT대학 225호",
-      color: getRandomColor(),
-      startHour: 9, // 9시에 시작
-      duration: 4, // 1시간 수업
-    });
-  };
 
   // 과목 검색 기능
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value;
     setSearchTerm(searchTerm);
+    const searchResults = courses.filter((course: CourseType) =>
+      course.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredCourses(searchResults); // 검색 결과 업데이트
+  };
 
-    // 필터링 로직
-    const searchResults = [
-      {
-        name: "데이터베이스",
-        location: "IT대학 225호",
-        color: getRandomColor(),
-        startHour: 9,
-        duration: 4,
-      },
-      {
-        name: "알고리즘",
-        location: "IT대학 101호",
-        color: getRandomColor(),
-        startHour: 13,
-        duration: 4,
-      },
-    ].filter((course) => course.name.includes(searchTerm));
+  // 시간표에 과목 추가하는 함수
+  const addCourseToTimetable = (course: CourseType, day: "mon" | "tue" | "wed" | "thu" | "fri") => {
+    setTimetable((prev) => {
+      const newTimetable = [...prev];
+      const startSlot = Math.floor(course.startHour) - 6; // 시간표 시작이 6시
+      const endSlot = Math.ceil(course.finalHour) - 6;
 
-    setFilteredCourses(searchResults);
+      for (let slotIndex = startSlot; slotIndex < endSlot; slotIndex++) {
+        if (slotIndex >= 0 && slotIndex < newTimetable.length) {
+          const timeSlot = newTimetable[slotIndex];
+          // 처음 시작 시간과 마지막 시간을 위한 절반 칸 처리
+          if (slotIndex === startSlot && course.startHour % 1 !== 0) {
+            timeSlot[day] = { ...course, partial: "bottom" } as any;  // 시작 시간이 30분일 때
+          } else if (slotIndex === endSlot - 1 && course.finalHour % 1 !== 0) {
+            timeSlot[day] = { ...course, partial: "top" } as any; // 종료 시간이 30분일 때
+          } else {
+            timeSlot[day] = { ...course, partial: "full" } as any; // 전체 칸 채우기
+          }
+        }
+      }
+
+      return newTimetable;
+    });
+  };
+
+  // 각 수업이 시간표에 어떻게 표시될지 결정하는 함수
+  const getSlotStyle = (course: CourseType, hour: number) => {
+    const partial = (course as any).partial; // 'partial'은 동적으로 추가된 속성이므로 타입을 any로 처리
+    if (partial === "bottom") {
+      return { height: "50%", backgroundColor: course.color, alignSelf: "flex-end" }; // 시작 시간의 절반만 색칠
+    } else if (partial === "top") {
+      return { height: "50%", backgroundColor: course.color }; // 종료 시간의 절반만 색칠
+    } else if (partial === "full") {
+      return { height: "100%", backgroundColor: course.color }; // 전체 칸 색칠
+    } else {
+      return { height: "0%", backgroundColor: "transparent" }; // 색칠 안함
+    }
   };
 
   return (
-    <Wrapper>
+    <Box>
       <Box bg="gray.100" p={4} borderRadius="md">
         <Input
           placeholder="과목명 검색"
@@ -98,19 +125,13 @@ export const Contents = () => {
         />
         <VStack align="stretch" mt={2}>
           {filteredCourses.map((course, index) => (
-            <HStack
-              key={index}
-              justify="space-between"
-              bg="gray.200"
-              p={2}
-              borderRadius="md"
-            >
+            <HStack key={index} justify="space-between" bg="gray.200" p={2} borderRadius="md">
               <Box>
                 <strong>{course.name}</strong>
                 <br />
                 <small>{course.location}</small>
               </Box>
-              <Button size="sm" onClick={() => addCourse("mon", course)}>
+              <Button size="sm" onClick={() => addCourseToTimetable(course, "mon")}>
                 추가
               </Button>
             </HStack>
@@ -134,32 +155,32 @@ export const Contents = () => {
               <>
                 <TimeSlot key={`time-${index}`}>{slot.time}</TimeSlot>
                 <DaySlot>
-                  {slot.mon && <Course {...slot.mon} />}
+                  {slot.mon && <Course style={getSlotStyle(slot.mon, index + 6)} {...slot.mon} />}
                 </DaySlot>
                 <DaySlot>
-                  {slot.tue && <Course {...slot.tue} />}
+                  {slot.tue && <Course style={getSlotStyle(slot.tue, index + 6)} {...slot.tue} />}
                 </DaySlot>
                 <DaySlot>
-                  {slot.wed && <Course {...slot.wed} />}
+                  {slot.wed && <Course style={getSlotStyle(slot.wed, index + 6)} {...slot.wed} />}
                 </DaySlot>
                 <DaySlot>
-                  {slot.thu && <Course {...slot.thu} />}
+                  {slot.thu && <Course style={getSlotStyle(slot.thu, index + 6)} {...slot.thu} />}
                 </DaySlot>
                 <DaySlot>
-                  {slot.fri && <Course {...slot.fri} />}
+                  {slot.fri && <Course style={getSlotStyle(slot.fri, index + 6)} {...slot.fri} />}
                 </DaySlot>
               </>
             ))}
           </TimetableGrid>
         </Header>
       </TimetableWrapper>
-    </Wrapper>
+    </Box>
   );
 };
 
 // 과목 컴포넌트
-const Course = ({ name, location, color }: CourseType) => (
-  <CourseBox bg={color}>
+const Course = ({ name, location, style }: { name: string; location: string; style: React.CSSProperties }) => (
+  <CourseBox style={style}>
     <Text fontSize="sm" fontWeight="bold">
       {name}
     </Text>
@@ -198,7 +219,7 @@ const GridHeader = styled.div`
 const TimetableGrid = styled.div`
   display: grid;
   grid-template-columns: 100px repeat(5, 1fr); /* 시간 칸 하나와 요일 5개 */
-  grid-auto-rows: 60px; /* 각 시간 칸 높이 설정 */
+  grid-auto-rows: 80px; /* 각 시간 칸 높이 설정 */
   gap: 1px; /* 칸 사이의 간격 */
 `;
 
@@ -214,7 +235,8 @@ const DaySlot = styled.div`
   border: 1px solid #ccc;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  height: 100%;
 `;
 
 const CourseBox = styled(Box)`
