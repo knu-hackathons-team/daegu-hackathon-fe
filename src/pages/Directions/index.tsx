@@ -1,6 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import styled from "@emotion/styled";
-import { Button, Flex, Text } from "@chakra-ui/react";
+import { Button, Flex, Text, Tooltip } from "@chakra-ui/react";
+import { FiCompass } from "react-icons/fi"; // 나침반 아이콘
 import React, { useEffect, useState, useRef } from "react";
 
 // Tmapv2 네임스페이스를 선언
@@ -42,6 +43,7 @@ const TMapPedestrianRoute = () => {
     }
   }, []);
 
+  // 출발지와 도착지가 모두 설정된 경우 경로 계산 실행
   useEffect(() => {
     if (startPoint && endPoint) {
       calculateShortestRoute();
@@ -82,19 +84,32 @@ const TMapPedestrianRoute = () => {
     console.log("End Point selected:", centerCoords);
   };
 
+  // 현재 위치 받아오기
+  const handleGetCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          console.log("User location:", latitude, longitude);
+          setCenterCoords({ lat: latitude, lng: longitude });
+
+          // 지도의 중심을 사용자 위치로 이동
+          mapRef.current.setCenter(new window.Tmapv2.LatLng(latitude, longitude));
+        },
+        (error) => {
+          console.error("Error fetching location:", error);
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+    }
+  };
+
   const calculateShortestRoute = async () => {
     if (!startPoint || !endPoint) {
       console.log("출발지와 도착지 설정 안 됨");
       return;
     }
-
-    console.log(
-      "출발지 경도: ",
-      startPoint.lng,
-      "출발지 위도: ",
-      startPoint.lat
-    );
-    console.log("도착지 경도: ", endPoint.lng, "도착지 위도: ", endPoint.lat);
 
     const url = "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1";
     const headers = {
@@ -114,8 +129,6 @@ const TMapPedestrianRoute = () => {
       searchOption: "0",
     });
 
-    console.log("Request Body:", requestBody.toString());
-
     try {
       const response = await fetch(url, {
         method: "POST",
@@ -124,8 +137,6 @@ const TMapPedestrianRoute = () => {
       });
 
       if (response.ok) {
-        console.log("Response received successfully");
-
         const data = await response.json();
 
         if (data.features && data.features.length > 0) {
@@ -178,16 +189,19 @@ const TMapPedestrianRoute = () => {
   return (
     <Wrapper>
       <div id="map_div"></div>
+      {/* 중앙 고정 빨간 점 */}
       <CenterDot />
 
+      {/* 우측 상단의 InfoBox에 현재 위치 버튼 추가 */}
       <InfoBox>
         <p>위도: {centerCoords.lat.toFixed(6)}</p>
         <p>경도: {centerCoords.lng.toFixed(6)}</p>
         {distance && <p>거리: {distance} km</p>}
-        {/*거동불편자 이동거리는 TMAP에서 반환하는 이동예상 시간에 1.5를 곱해줬음*/}
-        {estimatedTime && <p>예상 이동시간: {estimatedTime * 1.5} 분</p>} 
+        {estimatedTime && <p>예상 이동시간: {estimatedTime * 1.5} 분</p>}
+        
       </InfoBox>
 
+      {/* 좌측 상단의 LocationBox */}
       <LocationBox>
         <p>
           출발지:{" "}
@@ -201,6 +215,16 @@ const TMapPedestrianRoute = () => {
             ? `${endPoint.lat.toFixed(6)}, ${endPoint.lng.toFixed(6)}`
             : "미설정"}
         </p>
+                {/* 현재 위치 찾기 버튼 */}
+                <Tooltip label="현재 위치 보여주기" aria-label="현재 위치 보여주기">
+          <Button
+            onClick={handleGetCurrentLocation}
+            bg="transparent"
+            _hover={{ bg: "gray.200" }}
+          >
+            <FiCompass size={24} color="black" />
+          </Button>
+        </Tooltip>
       </LocationBox>
 
       <ButtonWrapper>
@@ -240,7 +264,7 @@ const InfoBox = styled.div`
   position: absolute;
   top: 10px;
   right: 50px;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(220, 220, 220, 0.8);
   padding: 10px;
   border-radius: 8px;
   z-index: 1000;
@@ -250,7 +274,7 @@ const LocationBox = styled.div`
   position: absolute;
   top: 10px;
   left: 10px;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(220, 220, 220, 0.8);
   padding: 10px;
   border-radius: 8px;
   z-index: 1000;
