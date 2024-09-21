@@ -7,7 +7,7 @@ export const Navigation: React.FC = () => {
     <Wrapper>
       <TextWrapper>
         <Description>
-          네비게이션 바입니다. 수정해줭<br />
+          네비게이션 바입니다. 수정해줭 싫엉<br />
         </Description>
       </TextWrapper>
     </Wrapper>
