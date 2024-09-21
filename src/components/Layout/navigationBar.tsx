@@ -6,19 +6,13 @@ export const Navigation: React.FC = () => {
   return (
     <Wrapper>
       <Link to="/" style={{ textDecoration: "none" }}>
-        <NavButton>
-          시간표
-        </NavButton>
+        <NavButton>시간표</NavButton>
       </Link>
       <Link to="/mypage" style={{ textDecoration: "none" }}>
-        <NavButton>
-          내정보
-        </NavButton>
+        <NavButton>내정보</NavButton>
       </Link>
       <Link to="/directions" style={{ textDecoration: "none" }}>
-        <NavButton>
-          지도탐색
-        </NavButton>
+        <NavButton>지도탐색</NavButton>
       </Link>
     </Wrapper>
   );
