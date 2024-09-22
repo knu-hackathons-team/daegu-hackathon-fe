@@ -25,6 +25,8 @@ const TMapPedestrianRoute = () => {
   const polylineRef = useRef<any>(null);
   const startMarkerRef = useRef<any>(null);
   const endMarkerRef = useRef<any>(null);
+  const startCircleRef = useRef<any>(null); // 출발지 원 참조
+  const endCircleRef = useRef<any>(null);   // 도착지 원 참조
 
   useEffect(() => {
     if (window.Tmapv2 && !mapRef.current) {
@@ -99,8 +101,13 @@ const TMapPedestrianRoute = () => {
             mapRef.current.setCenter(path[0]);
             mapRef.current.setZoom(17);
   
+            // 기존 출발지 원 제거
+            if (startCircleRef.current) {
+              startCircleRef.current.setMap(null);
+            }
+  
             // 출발지에 빨간 원 그리기
-            new window.Tmapv2.Circle({
+            startCircleRef.current = new window.Tmapv2.Circle({
               center: path[0], // 경로의 첫 번째 좌표가 출발지
               radius: 4.5, // 반지름 크기 (미터 단위)
               strokeColor: "#FF0000", // 원의 테두리 색
@@ -109,9 +116,14 @@ const TMapPedestrianRoute = () => {
               map: mapRef.current,
             });
   
+            // 기존 도착지 원 제거
+            if (endCircleRef.current) {
+              endCircleRef.current.setMap(null);
+            }
+  
             // 도착지에 빨간 원 그리기
             const lastCoord = path[path.length - 1];
-            new window.Tmapv2.Circle({
+            endCircleRef.current = new window.Tmapv2.Circle({
               center: lastCoord, // 경로의 마지막 좌표가 도착지
               radius: 4.5, // 반지름 크기 (미터 단위)
               strokeColor: "#FF0000", // 원의 테두리 색
@@ -211,17 +223,16 @@ const TMapPedestrianRoute = () => {
       icon: "https://img.icons8.com/emoji/48/000000/triangular-flag.png",
       map: mapRef.current,
     });
+// 먼저 POI 검색을 시도
+let buildingName = await getNearbyPOI(centerCoords.lat, centerCoords.lng);
 
-    // 먼저 POI 검색을 시도
-    let buildingName = await getNearbyPOI(centerCoords.lat, centerCoords.lng);
+// POI 정보가 없으면 역지오코딩으로 기본 주소 반환
+if (!buildingName || buildingName === "주변 건물 이름을 찾을 수 없음") {
+  buildingName = await getBuildingName(centerCoords.lat, centerCoords.lng);
+}
 
-    // POI 정보가 없으면 역지오코딩으로 기본 주소 반환
-    if (!buildingName || buildingName === "주변 건물 이름을 찾을 수 없음") {
-      buildingName = await getBuildingName(centerCoords.lat, centerCoords.lng);
-    }
-
-    setStartPoint((prev: any) => ({ ...prev, buildingName }));
-  };
+setStartPoint((prev: any) => ({ ...prev, buildingName }));
+};
 
   const handleEndSelection = async () => {
     setEndPoint(centerCoords);
@@ -235,17 +246,16 @@ const TMapPedestrianRoute = () => {
       icon: "https://img.icons8.com/emoji/48/000000/triangular-flag.png",
       map: mapRef.current,
     });
+     // 먼저 POI 검색을 시도
+     let buildingName = await getNearbyPOI(centerCoords.lat, centerCoords.lng);
 
-    // 먼저 POI 검색을 시도
-    let buildingName = await getNearbyPOI(centerCoords.lat, centerCoords.lng);
-
-    // POI 정보가 없으면 역지오코딩으로 기본 주소 반환
-    if (!buildingName || buildingName === "주변 건물 이름을 찾을 수 없음") {
-      buildingName = await getBuildingName(centerCoords.lat, centerCoords.lng);
-    }
-
-    setEndPoint((prev: any) => ({ ...prev, buildingName }));
-  };
+     // POI 정보가 없으면 역지오코딩으로 기본 주소 반환
+     if (!buildingName || buildingName === "주변 건물 이름을 찾을 수 없음") {
+       buildingName = await getBuildingName(centerCoords.lat, centerCoords.lng);
+     }
+ 
+     setEndPoint((prev: any) => ({ ...prev, buildingName }));
+   };
 
   const handleGetCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -284,15 +294,12 @@ const TMapPedestrianRoute = () => {
           출발지: {startPoint ? startPoint.buildingName || "미설정" : "미설정"}
         </p>
         <p>도착지: {endPoint ? endPoint.buildingName || "미설정" : "미설정"}</p>
-                {/* <p>위도: {centerCoords.lat.toFixed(6)}</p> */}
-        {/* <p>경도: {centerCoords.lng.toFixed(6)}</p> */}
         {distance && <p>거리: {distance * 1000} m</p>}
         {estimatedTime && <p>예상 이동시간: {estimatedTime * 1.5} 분</p>}
       </LocationBox>
 
-
       <ButtonWrapper>
-      <Tooltip label="현재 위치로 이동" aria-label="현재 위치로 이동"  placement="top">
+      <Tooltip label="현재 위치로 이동" aria-label="현재 위치로 이동" placement="top">
         <LocationButton onClick={handleGetCurrentLocation}>
           <FiCompass size={24} color="white" />
         </LocationButton>
@@ -355,7 +362,6 @@ const LocationButton = styled(Button)`
   }
 `;
 
-
 const Modal = styled.div`
   position: absolute;
   top: 50%;
@@ -416,5 +422,5 @@ const CenterDot = styled.div`
   background-color: red;
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  z-index: 1000
-  `;
+  z-index: 1000;
+`;
