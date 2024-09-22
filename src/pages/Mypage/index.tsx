@@ -25,7 +25,7 @@ const Mypage = () => {
         }
     }, []);
 
-    const getUserInfo = async (token: string) => {
+    const getUserInfo = async (token: string) => {  // 타입 명시: token은 string 타입
         try {
             // 서버에서 유저 정보를 가져오는 API 호출
             const response = await axios.get('https://giftshop-kakao.shop/api/member/info', {
@@ -74,7 +74,37 @@ const Mypage = () => {
             console.error("Error updating nickname:", error);
         }
     };
-    
+
+    const handleLogout = async () => {
+        const kakaoToken = localStorage.getItem("kakaoToken");
+
+        if (!kakaoToken) {
+            alert("로그인 상태가 아닙니다.");
+            return;
+        }
+
+        try {
+            // 로그아웃 요청
+            const response = await axios.post('https://giftshop-kakao.shop/api/member/logout', null, {
+                headers: {
+                    Authorization: `Bearer ${kakaoToken}`,
+                },
+            });
+
+            if (response.status === 200) {
+                // 로그아웃 성공 시 localStorage에서 토큰 및 사용자 정보 삭제
+                localStorage.removeItem("kakaoToken");
+                localStorage.removeItem("nickname");
+
+                setIsLoggedIn(false); // 로그인 상태를 false로 변경
+                alert("로그아웃이 완료되었습니다.");
+            } else {
+                alert("로그아웃에 실패했습니다.");
+            }
+        } catch (error) {
+            console.error("로그아웃 중 오류 발생:", error);
+        }
+    };
 
     // 로그인되지 않은 경우 로그인 화면을 보여줌
     if (!isLoggedIn) {
@@ -106,6 +136,9 @@ const Mypage = () => {
                 />
                 <Button colorScheme="blue" onClick={handleNicknameChange}>
                     닉네임 변경
+                </Button>
+                <Button colorScheme="red" onClick={handleLogout}>
+                    로그아웃
                 </Button>
             </VStack>
         </Wrapper>
