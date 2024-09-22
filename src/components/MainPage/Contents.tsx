@@ -1,14 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import styled from "@emotion/styled";
-import {
-  Box,
-  Input,
-  Button,
-  Text,
-  VStack,
-  HStack,
-} from "@chakra-ui/react";
+import { Box, Input, Button, Text, VStack, HStack } from "@chakra-ui/react";
 import ModalComponent from "./ModalComponent";
 
 // 과목 타입 정의
@@ -67,7 +60,6 @@ export const Contents = () => {
 
   const nickname = localStorage.getItem("nickname");
 
-
   const openModal = (day: string) => {
     setSelectedDay(day);
     setIsModalOpen(true);
@@ -80,10 +72,18 @@ export const Contents = () => {
   // 서버로부터 과목 데이터를 받아오는 함수
   useEffect(() => {
     const fetchData = async () => {
+      const kakaoToken = localStorage.getItem("kakaoToken"); // 로컬 스토리지에서 토큰 가져오기
+
       try {
         const response = await axios.get(
-          "http://giftshop-kakao.shop:8080/api/subject/search"
+          "http://giftshop-kakao.shop/api/subject/search",
+          {
+            headers: {
+              Authorization: `Bearer ${kakaoToken}`, // JWT 토큰을 Authorization 헤더에 포함
+            },
+          }
         );
+
         const data = response.data.subjects.map((subject: any) => ({
           ...subject,
           color: getRandomColor(), // 랜덤 색상 추가
@@ -172,7 +172,7 @@ export const Contents = () => {
   };
 
   return (
-    <Box bg = 'white' height="100vh" marginBottom="-59.5px">
+    <Box bg="white" height="100vh" marginBottom="-59.5px">
       <Box bg="gray.100" p={5} borderRadius="md">
         <Input
           placeholder="과목명 검색"
@@ -182,8 +182,13 @@ export const Contents = () => {
         />
         {/* 검색어가 비어있지 않을 때만 VStack을 보여줌 */}
         {searchTerm && (
-          <VStack align="stretch" mt={2}>
-            {filteredCourses.map((course, index) => (
+          <VStack
+            align="stretch"
+            mt={2}
+            spacing={2}
+            height={`${Math.min(filteredCourses.length, 5) * 50}px`} // 검색 결과의 개수에 따라 동적으로 높이 설정 (1개 당 50px씩)
+          >
+            {filteredCourses.slice(0, 5).map((course, index) => (
               <HStack
                 key={index}
                 justify="space-between"
