@@ -30,6 +30,15 @@ const TMapPedestrianRoute = () => {
   const startCircleRef = useRef<any>(null); // 출발지 원 참조
   const endCircleRef = useRef<any>(null);   // 도착지 원 참조
 
+  const [speedMultiplier, setSpeedMultiplier] = useState<number>(1.5); // 기본값 1.5
+
+  useEffect(() => {
+    const storedSpeed = localStorage.getItem('speed');
+    if (storedSpeed) {
+      setSpeedMultiplier(parseFloat(storedSpeed)); // localStorage에서 가져온 값을 숫자로 변환하여 설정
+    }
+  }, []);
+
   useEffect(() => {
     if (window.Tmapv2 && !mapRef.current) {
       const map = new window.Tmapv2.Map("map_div", {
@@ -293,7 +302,8 @@ setStartPoint((prev: any) => ({ ...prev, buildingName }));
       <CenterDot />
       {selectionModalVisible && (<Modal duration={3}>출발지와 도착지를 선택해주세요</Modal>)}
       {isModalVisible && <Modal duration={1.7}>현재 사용자 위치로 커서를 이동합니다.</Modal>}
-
+      {estimatedTime && <p>예상 이동시간: {estimatedTime * speedMultiplier} 분</p>} {/* speedMultiplier 곱해줌 */}
+      <p>현재 곱해지는 값: {speedMultiplier}</p> {/* 현재 속도 multiplier 표시 */}
       <LocationBox>
         <p>
           출발지: {startPoint ? startPoint.buildingName || "미설정" : "미설정"}
