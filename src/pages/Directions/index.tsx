@@ -4,7 +4,6 @@ import { Button, Tooltip } from "@chakra-ui/react";
 import { FiCompass } from "react-icons/fi"; // 나침반 아이콘
 import { useEffect, useState, useRef, useCallback } from "react";
 
-
 // Tmapv2 네임스페이스를 선언
 declare global {
   interface Window {
@@ -29,12 +28,12 @@ const TMapPedestrianRoute = () => {
   const startMarkerRef = useRef<any>(null);
   const endMarkerRef = useRef<any>(null);
   const startCircleRef = useRef<any>(null); // 출발지 원 참조
-  const endCircleRef = useRef<any>(null);   // 도착지 원 참조
+  const endCircleRef = useRef<any>(null); // 도착지 원 참조
 
   const [speedMultiplier, setSpeedMultiplier] = useState<number>(1.5); // 기본값 1.5
 
   useEffect(() => {
-    const storedSpeed = localStorage.getItem('speed');
+    const storedSpeed = localStorage.getItem("speed");
     if (storedSpeed) {
       setSpeedMultiplier(parseFloat(storedSpeed)); // localStorage에서 가져온 값을 숫자로 변환하여 설정
     }
@@ -112,39 +111,39 @@ const TMapPedestrianRoute = () => {
           if (path.length > 0) {
             mapRef.current.setCenter(path[0]);
             mapRef.current.setZoom(17);
-  
+
             // 기존 출발지 원 제거
             if (startCircleRef.current) {
               startCircleRef.current.setMap(null);
             }
-  
+
             // 출발지에 빨간 원 그리기
             startCircleRef.current = new window.Tmapv2.Circle({
-              center: path[0], 
+              center: path[0],
               radius: 4.5,
               strokeColor: "#FF0000",
               fillColor: "#FF0000",
               fillOpacity: 1,
               map: mapRef.current,
             });
-  
+
             // 기존 도착지 원 제거
             if (endCircleRef.current) {
               endCircleRef.current.setMap(null);
             }
-  
+
             // 도착지에 빨간 원 그리기
             const lastCoord = path[path.length - 1];
             endCircleRef.current = new window.Tmapv2.Circle({
-              center: lastCoord, 
-              radius: 4.5, 
+              center: lastCoord,
+              radius: 4.5,
               strokeColor: "#FF0000",
-              fillColor: "#FF0000", 
+              fillColor: "#FF0000",
               fillOpacity: 1,
               map: mapRef.current,
             });
           }
-          
+
           const totalDistance = data.features
             .filter((feature: any) => feature.properties.totalDistance)
             .map((feature: any) => feature.properties.totalDistance)[0];
@@ -176,14 +175,14 @@ const TMapPedestrianRoute = () => {
   // POI 검색 함수 추가
   const getNearbyPOI = async (lat: number, lng: number) => {
     const url = `https://apis.openapi.sk.com/tmap/pois/search/around?version=1&centerLat=${lat}&centerLon=${lng}&radius=1&appKey=wPnLT4b0AWa0YBI8jsof74ewEVe5JXoUidYnvxXc`;
-  
+
     try {
       console.log("POI 검색 요청:", url); // 요청 URL 확인
       const response = await fetch(url);
       const data = await response.json();
-  
+
       console.log("POI 검색 응답 데이터:", data); // 응답 데이터 확인
-  
+
       if (data.searchPoiInfo.pois.poi.length > 0) {
         return data.searchPoiInfo.pois.poi[0].name; // 첫 번째 POI의 이름 반환
       } else {
@@ -194,7 +193,6 @@ const TMapPedestrianRoute = () => {
       return "getNearbyPOI 오류 발생";
     }
   };
-  
 
   const getBuildingName = async (lat: number, lng: number) => {
     const url = `https://apis.openapi.sk.com/tmap/geo/reversegeocoding?version=1&lat=${lat}&lon=${lng}&coordType=WGS84GEO&addressType=A10&appKey=wPnLT4b0AWa0YBI8jsof74ewEVe5JXoUidYnvxXc`;
@@ -236,17 +234,16 @@ const TMapPedestrianRoute = () => {
       map: mapRef.current,
     });
 
-// 먼저 POI 검색을 시도
-let buildingName = await getNearbyPOI(centerCoords.lat, centerCoords.lng);
+    // 먼저 POI 검색을 시도
+    let buildingName = await getNearbyPOI(centerCoords.lat, centerCoords.lng);
 
-// POI 정보가 없으면 역지오코딩으로 기본 주소 반환
-if (!buildingName || buildingName === "주변 건물 이름을 찾을 수 없음") {
-  buildingName = await getBuildingName(centerCoords.lat, centerCoords.lng);
-}
+    // POI 정보가 없으면 역지오코딩으로 기본 주소 반환
+    if (!buildingName || buildingName === "주변 건물 이름을 찾을 수 없음") {
+      buildingName = await getBuildingName(centerCoords.lat, centerCoords.lng);
+    }
 
-setStartPoint((prev: any) => ({ ...prev, buildingName }));
-
-};
+    setStartPoint((prev: any) => ({ ...prev, buildingName }));
+  };
 
   const handleEndSelection = async () => {
     setEndPoint(centerCoords);
@@ -260,7 +257,7 @@ setStartPoint((prev: any) => ({ ...prev, buildingName }));
       icon: "https://img.icons8.com/emoji/48/000000/triangular-flag.png",
       map: mapRef.current,
     });
-     // 먼저 POI 검색을 시도
+    // 먼저 POI 검색을 시도
     let buildingName = await getNearbyPOI(centerCoords.lat, centerCoords.lng);
 
     // POI 정보가 없으면 역지오코딩으로 기본 주소 반환
@@ -269,7 +266,6 @@ setStartPoint((prev: any) => ({ ...prev, buildingName }));
     }
 
     setEndPoint((prev: any) => ({ ...prev, buildingName }));
-
   };
 
   const handleGetCurrentLocation = () => {
@@ -301,25 +297,29 @@ setStartPoint((prev: any) => ({ ...prev, buildingName }));
     <Wrapper>
       <div id="map_div"></div>
       <CenterDot />
-      {selectionModalVisible && (<Modal duration={3}>출발지와 도착지를 선택해주세요</Modal>)}
-      {isModalVisible && <Modal duration={1.7}>현재 사용자 위치로 커서를 이동합니다.</Modal>}
-      {estimatedTime && <p>예상 이동시간: {estimatedTime * speedMultiplier} 분</p>} {/* speedMultiplier 곱해줌 */}
-      <p>현재 곱해지는 값: {speedMultiplier}</p> {/* 현재 속도 multiplier 표시 */}
       <LocationBox>
         <p>
           출발지: {startPoint ? startPoint.buildingName || "미설정" : "미설정"}
         </p>
         <p>도착지: {endPoint ? endPoint.buildingName || "미설정" : "미설정"}</p>
         {distance && <p>거리: {distance * 1000} m</p>}
-        {estimatedTime && <p>예상 이동시간: {estimatedTime * 1.5} 분</p>}
+        {estimatedTime && (
+          <p>예상 이동시간: {estimatedTime * speedMultiplier} 분</p>
+        )}{" "}
+        {/* speedMultiplier 곱해줌 */}
+        <p>현재 곱해지는 값: {speedMultiplier}</p>{" "}
+        {/* 현재 속도 multiplier 표시 */}
       </LocationBox>
-
       <ButtonWrapper>
-      <Tooltip label="현재 위치로 이동" aria-label="현재 위치로 이동" placement="top">
-        <LocationButton onClick={handleGetCurrentLocation}>
-          <FiCompass size={24} color="white" />
-        </LocationButton>
-      </Tooltip>
+        <Tooltip
+          label="현재 위치로 이동"
+          aria-label="현재 위치로 이동"
+          placement="top"
+        >
+          <LocationButton onClick={handleGetCurrentLocation}>
+            <FiCompass size={24} color="white" />
+          </LocationButton>
+        </Tooltip>
         <Button
           onClick={handleStartSelection}
           bg="blue.500"
@@ -370,7 +370,7 @@ const LocationButton = styled(Button)`
   bottom: 80px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #666666; 
+  background-color: #666666;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   padding: 22px;
   &:hover {
@@ -406,7 +406,6 @@ const Modal = styled.div<{ duration: number }>`
     }
   }
 `;
-
 
 const ButtonWrapper = styled.div`
   position: absolute;
