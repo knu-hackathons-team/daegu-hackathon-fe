@@ -63,13 +63,13 @@ export const Navigation: React.FC = () => {
 
 const Wrapper = styled.footer`
   width: 100%;
-  height: 60px;
-  background-color: #f5f5f5; /* 연한 핑크색 배경 */
+  height: 75px;
+  background-color: #f5f5f5;
   display: flex;
   justify-content: space-around;
   align-items: center;
   padding: 10px 0;
-  position: relative; /* 타원 배경이 버튼 뒤에 오도록 설정 */
+  position: relative;
   box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.2);
 
 `;
@@ -80,12 +80,12 @@ const NavItemWrapper = styled.div`
 
 const NavItem = styled(Link)<{ active: boolean }>`
   text-decoration: none;
-  color: ${({ active }) => (active ? "#fff" : "#2b2b2b")}; /* 활성화 시 흰색, 비활성화 시 밝은 회색 */
+  color: ${({ active }) => (active ? "#fff" : "#2b2b2b")}; 
   font-size: 16px;
   font-family: "Inter", sans-serif;
   position: relative;
   z-index: 2;
-  padding: 10px 20px; /* padding을 추가해 버튼 크기 통일 */
+  padding: 10px 20px; 
   transition: color 0.3s ease; /* 클릭 시 색상 부드럽게 변화 */
 `;
 
@@ -96,8 +96,8 @@ const ActiveBackground = styled.div<{ left: number; width: number }>`
   left: ${({ left }) => `${left}px`}; /* 텍스트 좌우 중앙에 맞게 위치 */
   width: ${({ width }) => `${width}px`}; /* 타원의 너비는 텍스트 길이 */
   height: 40px;
-  background-color: #52586A; /* 진한 회색 (활성화 시 배경색) */
-  border-radius: 20px; /* 타원 형태 */
+  background-color: #52586A; 
+  border-radius: 20px; 
   z-index: 1;
   transition: all 0.5s ease; /* 부드럽게 움직이는 애니메이션 */
 `;

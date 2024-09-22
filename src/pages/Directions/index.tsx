@@ -269,13 +269,13 @@ const TMapPedestrianRoute = () => {
         {estimatedTime && <p>예상 이동시간: {estimatedTime * 1.5} 분</p>}
       </LocationBox>
 
-      <Tooltip label="현재 위치로 이동" aria-label="현재 위치로 이동">
-        <LocationButton onClick={handleGetCurrentLocation}>
-          <FiCompass size={24} color="black" />
-        </LocationButton>
-      </Tooltip>
 
       <ButtonWrapper>
+      <Tooltip label="현재 위치로 이동" aria-label="현재 위치로 이동"  placement="top">
+        <LocationButton onClick={handleGetCurrentLocation}>
+          <FiCompass size={24} color="white" />
+        </LocationButton>
+      </Tooltip>
         <Button
           onClick={handleStartSelection}
           bg="blue.500"
@@ -323,15 +323,17 @@ const LocationBox = styled.div`
 
 const LocationButton = styled(Button)`
   position: absolute;
-  top: 90px;
-  left: 10px;
-  background-color: #ee82ee;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #666666; 
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-  padding: 20px;
+  padding: 22px;
   &:hover {
-    background-color: #ba55d3;
+    background-color: #999999; /* 더 짙은 회색으로 hover 효과 */
   }
 `;
+
 
 const Modal = styled.div`
   position: absolute;
@@ -364,7 +366,7 @@ const Modal = styled.div`
 
 const ButtonWrapper = styled.div`
   position: absolute;
-  bottom: 140px;
+  bottom: 110px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
