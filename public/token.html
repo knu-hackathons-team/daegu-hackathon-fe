@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OAuth Callback</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin-top: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>OAuth Callback</h1>
+    <p id="tokenDisplay">토큰을 기다리고 있습니다...</p>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("tokenValue");
+      // 토큰을 표시할 요소 - 추후 삭제 예정
+      const tokenDisplay = document.getElementById("tokenDisplay");
+      if (token) {
+        // 토큰이 존재하면 로컬 스토리지에 저장
+        console.log("Received token:", token);
+        localStorage.setItem("kakaoToken", token);
+        tokenDisplay.textContent = `Received token: ${token}`;
+        // 확인 후 홈페이지로 리디렉션 - 추후 삭제 예정
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 5000);
+      } else {
+        console.error("Token not found in query parameters.");
+        tokenDisplay.textContent = "Token not found in query parameters.";
+      }
+    </script>
+  </body>
+</html>
