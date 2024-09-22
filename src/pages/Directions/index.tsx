@@ -112,12 +112,10 @@ const TMapPedestrianRoute = () => {
             mapRef.current.setCenter(path[0]);
             mapRef.current.setZoom(17);
 
-            // 기존 출발지 원 제거
             if (startCircleRef.current) {
               startCircleRef.current.setMap(null);
             }
 
-            // 출발지에 빨간 원 그리기
             startCircleRef.current = new window.Tmapv2.Circle({
               center: path[0],
               radius: 4.5,
@@ -127,12 +125,10 @@ const TMapPedestrianRoute = () => {
               map: mapRef.current,
             });
 
-            // 기존 도착지 원 제거
             if (endCircleRef.current) {
               endCircleRef.current.setMap(null);
             }
 
-            // 도착지에 빨간 원 그리기
             const lastCoord = path[path.length - 1];
             endCircleRef.current = new window.Tmapv2.Circle({
               center: lastCoord,
@@ -177,14 +173,11 @@ const TMapPedestrianRoute = () => {
     const url = `https://apis.openapi.sk.com/tmap/pois/search/around?version=1&centerLat=${lat}&centerLon=${lng}&radius=1&appKey=wPnLT4b0AWa0YBI8jsof74ewEVe5JXoUidYnvxXc`;
 
     try {
-      console.log("POI 검색 요청:", url); // 요청 URL 확인
       const response = await fetch(url);
       const data = await response.json();
 
-      console.log("POI 검색 응답 데이터:", data); // 응답 데이터 확인
-
       if (data.searchPoiInfo.pois.poi.length > 0) {
-        return data.searchPoiInfo.pois.poi[0].name; // 첫 번째 POI의 이름 반환
+        return data.searchPoiInfo.pois.poi[0].name;
       } else {
         return "주변 건물 이름을 찾을 수 없음";
       }
@@ -198,19 +191,12 @@ const TMapPedestrianRoute = () => {
     const url = `https://apis.openapi.sk.com/tmap/geo/reversegeocoding?version=1&lat=${lat}&lon=${lng}&coordType=WGS84GEO&addressType=A10&appKey=wPnLT4b0AWa0YBI8jsof74ewEVe5JXoUidYnvxXc`;
 
     try {
-      console.log("Sending request to:", url); // 요청 URL 확인
       const response = await fetch(url);
-
-      console.log("Response status:", response.status); // 응답 상태 확인
       const data = await response.json();
 
-      console.log("Response data:", data); // 응답 데이터 확인
-
       if (data.addressInfo) {
-        console.log("Building name found:", data.addressInfo.buildingName);
         return data.addressInfo.buildingName || data.addressInfo.fullAddress;
       } else {
-        console.warn("No address info found in the response.");
         return "건물 이름을 찾을 수 없음";
       }
     } catch (error) {
@@ -234,10 +220,8 @@ const TMapPedestrianRoute = () => {
       map: mapRef.current,
     });
 
-    // 먼저 POI 검색을 시도
     let buildingName = await getNearbyPOI(centerCoords.lat, centerCoords.lng);
 
-    // POI 정보가 없으면 역지오코딩으로 기본 주소 반환
     if (!buildingName || buildingName === "주변 건물 이름을 찾을 수 없음") {
       buildingName = await getBuildingName(centerCoords.lat, centerCoords.lng);
     }
@@ -257,10 +241,9 @@ const TMapPedestrianRoute = () => {
       icon: "https://img.icons8.com/emoji/48/000000/triangular-flag.png",
       map: mapRef.current,
     });
-    // 먼저 POI 검색을 시도
+
     let buildingName = await getNearbyPOI(centerCoords.lat, centerCoords.lng);
 
-    // POI 정보가 없으면 역지오코딩으로 기본 주소 반환
     if (!buildingName || buildingName === "주변 건물 이름을 찾을 수 없음") {
       buildingName = await getBuildingName(centerCoords.lat, centerCoords.lng);
     }
@@ -293,6 +276,47 @@ const TMapPedestrianRoute = () => {
     }
   };
 
+  const handleSendKakao = async () => {
+    const kakaoToken = localStorage.getItem("kakaotoken");
+    const url = "https://giftshop-kakao.shop/api/timetable/kakao";
+
+    if (!kakaoToken) {
+      console.error("카카오 토큰이 없습니다.");
+      return;
+    }
+
+    if (!startPoint || !endPoint || !estimatedTime || !distance) {
+      console.error("모든 필드가 채워지지 않았습니다.");
+      return;
+    }
+
+    const requestBody = {
+      startLocation: startPoint.buildingName || "미설정",
+      endLocation: endPoint.buildingName || "미설정",
+      travelTime: estimatedTime * speedMultiplier,
+      distance: distance * 1000, // m 단위로 전송
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${kakaoToken}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (response.ok) {
+        console.log("카톡 메시지 전송 성공");
+      } else {
+        console.error("카톡 메시지 전송 실패:", response.status);
+      }
+    } catch (error) {
+      console.error("카톡 메시지 전송 중 오류 발생:", error);
+    }
+  };
+
   return (
     <Wrapper>
       <div id="map_div"></div>
@@ -305,19 +329,17 @@ const TMapPedestrianRoute = () => {
         {distance && <p>거리: {distance * 1000} m</p>}
         {estimatedTime && (
           <p>예상 이동시간: {estimatedTime * speedMultiplier} 분</p>
-        )}{" "}
-        {/* speedMultiplier 곱해줌 */}
+        )}
         <p>
           현재 속도:
           {speedMultiplier === 2.0
-            ? "느림"
+            ? " 느림"
             : speedMultiplier === 1.5
-            ? "보통"
+            ? " 보통"
             : speedMultiplier === 1.2
-            ? "빠름"
-            : "알 수 없음"}
+            ? " 빠름"
+            : " 알 수 없음"}
         </p>
-        {/* 현재 속도 multiplier 표시 */}
       </LocationBox>
       <ButtonWrapper>
         <Tooltip
@@ -349,6 +371,8 @@ const TMapPedestrianRoute = () => {
           도착지 선택
         </Button>
       </ButtonWrapper>
+
+      <SendKakaoButton onClick={handleSendKakao}>카톡전송</SendKakaoButton>
     </Wrapper>
   );
 };
@@ -387,35 +411,6 @@ const LocationButton = styled(Button)`
   }
 `;
 
-const Modal = styled.div<{ duration: number }>`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 20px;
-  border-radius: 8px;
-  z-index: 2000;
-  opacity: 0;
-  animation: ${({ duration }) => `fadeInOut ${duration}s forwards`};
-
-  @keyframes fadeInOut {
-    0% {
-      opacity: 0;
-    }
-    20% {
-      opacity: 1;
-    }
-    80% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
-    }
-  }
-`;
-
 const ButtonWrapper = styled.div`
   position: absolute;
   bottom: 110px;
@@ -448,4 +443,17 @@ const CenterDot = styled.div`
   border-radius: 50%;
   transform: translate(-50%, -50%);
   z-index: 1000;
+`;
+
+const SendKakaoButton = styled(Button)`
+  position: absolute;
+  right: 20px;
+  bottom: 50%;
+  transform: translateY(50%);
+  background-color: #f9d54e;
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  &:hover {
+    background-color: #f2c30d;
+  }
 `;
