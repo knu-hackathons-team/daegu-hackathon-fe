@@ -146,7 +146,7 @@ const Mypage = () => {
                 <Box display="flex" gap="10px">
                     <Button 
                         colorScheme={speed === '2.0' ? 'blue' : 'gray'} 
-                        onClick={() => handleSpeedChange('1.3')}>
+                        onClick={() => handleSpeedChange('2.0')}>
                         느림
                     </Button>
                     <Button 
@@ -156,7 +156,7 @@ const Mypage = () => {
                     </Button>
                     <Button 
                         colorScheme={speed === '1.2' ? 'blue' : 'gray'} 
-                        onClick={() => handleSpeedChange('1.7')}>
+                        onClick={() => handleSpeedChange('1.2')}>
                         빠름
                     </Button>
                 </Box>
