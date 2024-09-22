@@ -3,6 +3,12 @@ import { Box, Text, Button, VStack, Input } from "@chakra-ui/react";
 import styled from "@emotion/styled";
 import axios from "axios";
 
+declare global {
+  interface Window {
+    Kakao: any;
+  }
+}
+
 const Mypage = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false); // 로그인 상태 확인을 위한 state
     const [name, setName] = useState("사용자 이름"); // 서버에서 받아온 닉네임
@@ -16,7 +22,7 @@ const Mypage = () => {
 
     useEffect(() => {
         // 카카오 SDK 초기화
-        if (window.Kakao) {
+        if (window.Kakao && !window.Kakao.isInitialized()) {
             window.Kakao.init('19fb7e3435dd1b7c84d9f4327644bf21'); // 실제 앱 키로 변경
         }
 
@@ -81,14 +87,24 @@ const Mypage = () => {
     };
 
     const handleLogout = () => {
-        if (window.Kakao) {
-            window.Kakao.Auth.logout(function(response:boolean) {
-                console.log('로그아웃 성공:', response);
-                localStorage.removeItem("kakaoToken"); // 로컬 스토리지에서 토큰 제거
-                localStorage.removeItem("nickname");
-                setIsLoggedIn(false); // 로그아웃 후 로그인 상태 변경
-                alert("로그아웃이 완료되었습니다.");
-            });
+        try {
+            if (window.Kakao && window.Kakao.Auth) {
+                window.Kakao.Auth.logout(function(response: boolean) {
+                    console.log('로그아웃 성공:', response);
+                    if (response) {
+                        localStorage.removeItem("kakaoToken"); // 로컬 스토리지에서 토큰 제거
+                        localStorage.removeItem("nickname");
+                        setIsLoggedIn(false); // 로그아웃 후 로그인 상태 변경
+                        alert("로그아웃이 완료되었습니다.");
+                    } else {
+                        console.error("로그아웃 실패:", response);
+                    }
+                });
+            } else {
+                console.error("Kakao SDK가 초기화되지 않았습니다.");
+            }
+        } catch (error) {
+            console.error("로그아웃 중 오류 발생:", error);
         }
     };
 
