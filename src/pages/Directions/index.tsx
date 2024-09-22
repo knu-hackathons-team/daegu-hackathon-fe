@@ -98,8 +98,29 @@ const TMapPedestrianRoute = () => {
           if (path.length > 0) {
             mapRef.current.setCenter(path[0]);
             mapRef.current.setZoom(17);
+  
+            // 출발지에 빨간 원 그리기
+            new window.Tmapv2.Circle({
+              center: path[0], // 경로의 첫 번째 좌표가 출발지
+              radius: 4.5, // 반지름 크기 (미터 단위)
+              strokeColor: "#FF0000", // 원의 테두리 색
+              fillColor: "#FF0000", // 원 내부 색상
+              fillOpacity: 1, // 원 내부 투명도
+              map: mapRef.current,
+            });
+  
+            // 도착지에 빨간 원 그리기
+            const lastCoord = path[path.length - 1];
+            new window.Tmapv2.Circle({
+              center: lastCoord, // 경로의 마지막 좌표가 도착지
+              radius: 4.5, // 반지름 크기 (미터 단위)
+              strokeColor: "#FF0000", // 원의 테두리 색
+              fillColor: "#FF0000", // 원 내부 색상
+              fillOpacity: 1, // 원 내부 투명도
+              map: mapRef.current,
+            });
           }
-
+          
           const totalDistance = data.features
             .filter((feature: any) => feature.properties.totalDistance)
             .map((feature: any) => feature.properties.totalDistance)[0];
