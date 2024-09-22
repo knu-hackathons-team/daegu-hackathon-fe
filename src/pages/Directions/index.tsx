@@ -277,7 +277,8 @@ const TMapPedestrianRoute = () => {
   };
 
   const handleSendKakao = async () => {
-    const kakaoToken = localStorage.getItem("kakaotoken");
+    const kakaoToken = localStorage.getItem("kakaoToken"); 
+    console.log(kakaoToken)
     const url = "https://giftshop-kakao.shop/api/timetable/kakao";
 
     if (!kakaoToken) {
@@ -291,10 +292,10 @@ const TMapPedestrianRoute = () => {
     }
 
     const requestBody = {
-      startLocation: startPoint.buildingName || "미설정",
-      endLocation: endPoint.buildingName || "미설정",
-      travelTime: estimatedTime * speedMultiplier,
-      distance: distance * 1000, // m 단위로 전송
+      start: startPoint.buildingName || "미설정",
+      end: endPoint.buildingName || "미설정",
+      estimatedTime: estimatedTime * speedMultiplier,
+      buildingDistance: distance * 1000, // m 단위로 전송
     };
 
     try {
