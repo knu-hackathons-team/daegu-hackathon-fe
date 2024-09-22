@@ -65,6 +65,9 @@ export const Contents = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>("");
 
+  const nickname = localStorage.getItem("nickname");
+
+
   const openModal = (day: string) => {
     setSelectedDay(day);
     setIsModalOpen(true);
@@ -207,7 +210,7 @@ export const Contents = () => {
 
       <TimetableWrapper>
         <Header>
-          <Text>00님의 시간표</Text>
+          <Text>{nickname}님의 시간표</Text>
           <GridHeader>
             <div></div> {/* 빈 칸 (시간 부분) */}
             <div onClick={() => openModal("월")}>월</div>
