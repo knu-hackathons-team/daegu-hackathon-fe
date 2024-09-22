@@ -94,7 +94,7 @@ export const Contents = () => {
 
       try {
         const response = await axios.get(
-          "http://giftshop-kakao.shop/api/subject/search",
+          "https://giftshop-kakao.shop/api/subject/search",
           {
             headers: {
               Authorization: `Bearer ${kakaoToken}`, // JWT 토큰을 Authorization 헤더에 포함
