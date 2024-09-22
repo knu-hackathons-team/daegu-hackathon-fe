@@ -15,6 +15,11 @@ const Mypage = () => {
     };
 
     useEffect(() => {
+        // 카카오 SDK 초기화
+        if (window.Kakao) {
+            window.Kakao.init('19fb7e3435dd1b7c84d9f4327644bf21'); // 실제 앱 키로 변경
+        }
+
         // 카카오 토큰 확인 및 서버에서 유저 정보 불러오기
         const kakaoToken = localStorage.getItem("kakaoToken"); 
         if (kakaoToken) {
@@ -75,34 +80,15 @@ const Mypage = () => {
         }
     };
 
-    const handleLogout = async () => {
-        const kakaoToken = localStorage.getItem("kakaoToken");
-
-        if (!kakaoToken) {
-            alert("로그인 상태가 아닙니다.");
-            return;
-        }
-
-        try {
-            // 로그아웃 요청
-            const response = await axios.post('https://giftshop-kakao.shop/api/member/logout', null, {
-                headers: {
-                    Authorization: `Bearer ${kakaoToken}`,
-                },
-            });
-
-            if (response.status === 200) {
-                // 로그아웃 성공 시 localStorage에서 토큰 및 사용자 정보 삭제
-                localStorage.removeItem("kakaoToken");
+    const handleLogout = () => {
+        if (window.Kakao) {
+            window.Kakao.Auth.logout(function(response:boolean) {
+                console.log('로그아웃 성공:', response);
+                localStorage.removeItem("kakaoToken"); // 로컬 스토리지에서 토큰 제거
                 localStorage.removeItem("nickname");
-
-                setIsLoggedIn(false); // 로그인 상태를 false로 변경
+                setIsLoggedIn(false); // 로그아웃 후 로그인 상태 변경
                 alert("로그아웃이 완료되었습니다.");
-            } else {
-                alert("로그아웃에 실패했습니다.");
-            }
-        } catch (error) {
-            console.error("로그아웃 중 오류 발생:", error);
+            });
         }
     };
 
