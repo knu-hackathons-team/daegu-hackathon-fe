@@ -307,7 +307,16 @@ const TMapPedestrianRoute = () => {
           <p>예상 이동시간: {estimatedTime * speedMultiplier} 분</p>
         )}{" "}
         {/* speedMultiplier 곱해줌 */}
-        <p>현재 곱해지는 값: {speedMultiplier}</p>{" "}
+        <p>
+          현재 속도:
+          {speedMultiplier === 2.0
+            ? "느림"
+            : speedMultiplier === 1.5
+            ? "보통"
+            : speedMultiplier === 1.2
+            ? "빠름"
+            : "알 수 없음"}
+        </p>
         {/* 현재 속도 multiplier 표시 */}
       </LocationBox>
       <ButtonWrapper>
