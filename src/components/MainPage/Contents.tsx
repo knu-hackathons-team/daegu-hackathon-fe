@@ -1,8 +1,20 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import styled from "@emotion/styled";
-import { Box, Input, Button, Text, VStack, HStack } from "@chakra-ui/react";
-import ModalComponent from "./ModalComponent";
+import {
+  Box,
+  Input,
+  Button,
+  Text,
+  VStack,
+  HStack,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@chakra-ui/react";
 
 // 과목 타입 정의
 interface CourseType {
@@ -51,12 +63,18 @@ const timetableStructure = Array.from({ length: 10 }, (_, i) => ({
 }));
 
 export const Contents = () => {
-  const [courses, setCourses] = useState<CourseType[]>([]); // 백엔드에서 받아올 과목 데이터
+  const [courses, setCourses] = useState<CourseType[]>([]);
   const [timetable, setTimetable] = useState(timetableStructure);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredCourses, setFilteredCourses] = useState<CourseType[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>("");
+  const [courseToDelete, setCourseToDelete] = useState<CourseType | null>(null);
+  const [dayToDelete, setDayToDelete] = useState<
+    "mon" | "tue" | "wed" | "thu" | "fri" | null
+  >(null);
+  const [hourToDelete, setHourToDelete] = useState<number | null>(null);
 
   const nickname = localStorage.getItem("nickname");
 
@@ -89,31 +107,31 @@ export const Contents = () => {
           color: getRandomColor(), // 랜덤 색상 추가
         }));
         setCourses(data); // 받아온 과목 데이터를 상태에 저장
-        console.log("과목 데이터를 성공적으로 받아왔습니다:", data);
-      } catch (error: unknown) {
-        if (axios.isAxiosError(error)) {
-          // Axios 에러인 경우 처리
-          if (error.response) {
-            // 서버가 응답을 했으나, 상태 코드가 범위 밖일 때
-            console.log("응답 오류:", error.response.status);
-            console.log("응답 데이터:", error.response.data);
-          } else if (error.request) {
-            // 요청이 서버에 도달하지 못했을 때
-            console.log("요청 오류:", error.request);
-          } else {
-            // 그 외 오류
-            console.log("에러 메시지:", error.message);
-          }
-        } else {
-          // Axios 에러가 아닌 경우 처리
-          console.error("알 수 없는 에러:", error);
-        }
+      } catch (error) {
         console.error("과목 데이터를 받아오는 중 오류가 발생했습니다.", error);
       }
     };
 
     fetchData();
   }, []);
+
+  // getSlotStyle 함수 추가
+  const getSlotStyle = (course: CourseType, hour: number) => {
+    const partial = course.partial; // 'partial' 속성으로 절반 색칠 여부 결정
+    if (partial === "bottom") {
+      return {
+        height: "50%",
+        backgroundColor: course.color,
+        alignSelf: "flex-end",
+      }; // 시작 시간이 30분일 때 절반 칸
+    } else if (partial === "top") {
+      return { height: "50%", backgroundColor: course.color }; // 종료 시간이 30분일 때 절반 칸
+    } else if (partial === "full") {
+      return { height: "100%", backgroundColor: course.color }; // 전체 칸 채우기
+    } else {
+      return { height: "0%", backgroundColor: "transparent" }; // 색칠 안함
+    }
+  };
 
   // 과목 검색 기능
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,13 +150,25 @@ export const Contents = () => {
   ) => {
     setTimetable((prev) => {
       const newTimetable = [...prev];
-      const startSlot = Math.floor(course.startHour) - 6; // 시간표 시작이 6시
+      const startSlot = Math.floor(course.startHour) - 6; // 시간표는 6시부터 시작
       const endSlot = Math.ceil(course.finalHour) - 6;
 
+      // 과목이 추가될 시간이 이미 채워져 있는지 확인
       for (let slotIndex = startSlot; slotIndex < endSlot; slotIndex++) {
         if (slotIndex >= 0 && slotIndex < newTimetable.length) {
           const timeSlot = newTimetable[slotIndex];
-          // 처음 시작 시간과 마지막 시간을 위한 절반 칸 처리
+          if (timeSlot[day] !== null) {
+            // 해당 칸이 비어있지 않으면 추가되지 않음
+            alert("해당 시간에 이미 다른 과목이 있습니다.");
+            return prev; // 상태 변경하지 않고 기존 상태 반환
+          }
+        }
+      }
+
+      // 해당 시간이 비어있는 경우에만 과목 추가
+      for (let slotIndex = startSlot; slotIndex < endSlot; slotIndex++) {
+        if (slotIndex >= 0 && slotIndex < newTimetable.length) {
+          const timeSlot = newTimetable[slotIndex];
           if (slotIndex === startSlot && course.startHour % 1 !== 0) {
             timeSlot[day] = { ...course, partial: "bottom" }; // 시작 시간이 30분일 때
           } else if (slotIndex === endSlot - 1 && course.finalHour % 1 !== 0) {
@@ -153,21 +183,41 @@ export const Contents = () => {
     });
   };
 
-  // 각 수업이 시간표에 어떻게 표시될지 결정하는 함수
-  const getSlotStyle = (course: CourseType, hour: number) => {
-    const partial = course.partial; // 'partial' 속성으로 절반 색칠 여부 결정
-    if (partial === "bottom") {
-      return {
-        height: "50%",
-        backgroundColor: course.color,
-        alignSelf: "flex-end",
-      }; // 시작 시간의 절반만 색칠
-    } else if (partial === "top") {
-      return { height: "50%", backgroundColor: course.color }; // 종료 시간의 절반만 색칠
-    } else if (partial === "full") {
-      return { height: "100%", backgroundColor: course.color }; // 전체 칸 색칠
-    } else {
-      return { height: "0%", backgroundColor: "transparent" }; // 색칠 안함
+  // 시간표에서 과목을 삭제하는 함수
+  const removeCourseFromTimetable = (
+    day: "mon" | "tue" | "wed" | "thu" | "fri",
+    hour: number
+  ) => {
+    setTimetable((prev) => {
+      const newTimetable = [...prev];
+      const slotIndex = hour - 6;
+      if (slotIndex >= 0 && slotIndex < newTimetable.length) {
+        newTimetable[slotIndex][day] = null; // 해당 시간대의 과목을 삭제
+      }
+      return newTimetable;
+    });
+  };
+
+  // 과목을 클릭하여 삭제 모달을 여는 함수
+  const handleCourseClick = (
+    course: CourseType,
+    day: "mon" | "tue" | "wed" | "thu" | "fri",
+    hour: number
+  ) => {
+    setCourseToDelete(course);
+    setDayToDelete(day);
+    setHourToDelete(hour);
+    setIsDeleteModalOpen(true);
+  };
+
+  // 모달에서 삭제를 확인하는 함수
+  const confirmDeleteCourse = () => {
+    if (courseToDelete && dayToDelete && hourToDelete !== null) {
+      removeCourseFromTimetable(dayToDelete, hourToDelete);
+      setIsDeleteModalOpen(false);
+      setCourseToDelete(null);
+      setDayToDelete(null);
+      setHourToDelete(null);
     }
   };
 
@@ -180,13 +230,12 @@ export const Contents = () => {
           onChange={handleSearch}
           bg="white"
         />
-        {/* 검색어가 비어있지 않을 때만 VStack을 보여줌 */}
         {searchTerm && (
           <VStack
             align="stretch"
             mt={2}
             spacing={2}
-            height={`${Math.min(filteredCourses.length, 5) * 50}px`} // 검색 결과의 개수에 따라 동적으로 높이 설정 (1개 당 50px씩)
+            height={`${Math.min(filteredCourses.length, 5) * 50}px`}
           >
             {filteredCourses.slice(0, 5).map((course, index) => (
               <HStack
@@ -217,18 +266,22 @@ export const Contents = () => {
         <Header>
           <Text>{nickname}님의 시간표</Text>
           <GridHeader>
-            <div></div> {/* 빈 칸 (시간 부분) */}
-            <div onClick={() => openModal("월")}>월</div>
-            <div onClick={() => openModal("화")}>화</div>
-            <div onClick={() => openModal("수")}>수</div>
-            <div onClick={() => openModal("목")}>목</div>
-            <div onClick={() => openModal("금")}>금</div>
+            <div></div>
+            <div>월</div>
+            <div>화</div>
+            <div>수</div>
+            <div>목</div>
+            <div>금</div>
           </GridHeader>
           <TimetableGrid>
             {timetable.map((slot, index) => (
               <>
                 <TimeSlot key={`time-${index}`}>{slot.time}</TimeSlot>
-                <DaySlot>
+                <DaySlot
+                  onClick={() =>
+                    slot.mon && handleCourseClick(slot.mon, "mon", index + 6)
+                  }
+                >
                   {slot.mon && (
                     <Course
                       style={getSlotStyle(slot.mon, index + 6)}
@@ -236,7 +289,11 @@ export const Contents = () => {
                     />
                   )}
                 </DaySlot>
-                <DaySlot>
+                <DaySlot
+                  onClick={() =>
+                    slot.tue && handleCourseClick(slot.tue, "tue", index + 6)
+                  }
+                >
                   {slot.tue && (
                     <Course
                       style={getSlotStyle(slot.tue, index + 6)}
@@ -244,7 +301,11 @@ export const Contents = () => {
                     />
                   )}
                 </DaySlot>
-                <DaySlot>
+                <DaySlot
+                  onClick={() =>
+                    slot.wed && handleCourseClick(slot.wed, "wed", index + 6)
+                  }
+                >
                   {slot.wed && (
                     <Course
                       style={getSlotStyle(slot.wed, index + 6)}
@@ -252,7 +313,11 @@ export const Contents = () => {
                     />
                   )}
                 </DaySlot>
-                <DaySlot>
+                <DaySlot
+                  onClick={() =>
+                    slot.thu && handleCourseClick(slot.thu, "thu", index + 6)
+                  }
+                >
                   {slot.thu && (
                     <Course
                       style={getSlotStyle(slot.thu, index + 6)}
@@ -260,7 +325,11 @@ export const Contents = () => {
                     />
                   )}
                 </DaySlot>
-                <DaySlot>
+                <DaySlot
+                  onClick={() =>
+                    slot.fri && handleCourseClick(slot.fri, "fri", index + 6)
+                  }
+                >
                   {slot.fri && (
                     <Course
                       style={getSlotStyle(slot.fri, index + 6)}
@@ -273,11 +342,27 @@ export const Contents = () => {
           </TimetableGrid>
         </Header>
       </TimetableWrapper>
-      <ModalComponent
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        selectedDay={selectedDay}
-      />
+
+      {/* 삭제 모달 */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        isCentered
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>과목 삭제</ModalHeader>
+          <ModalBody>이 과목을 삭제하시겠습니까?</ModalBody>
+          <ModalFooter>
+            <Button colorScheme="red" onClick={confirmDeleteCourse}>
+              삭제
+            </Button>
+            <Button ml={3} onClick={() => setIsDeleteModalOpen(false)}>
+              아니요
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
@@ -342,6 +427,7 @@ const DaySlot = styled.div`
   justify-content: center;
   align-items: flex-start;
   height: 100%;
+  cursor: pointer; /* 클릭 가능하다는 표시 */
 `;
 
 const CourseBox = styled(Box)`
