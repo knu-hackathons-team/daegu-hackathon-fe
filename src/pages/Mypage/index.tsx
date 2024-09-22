@@ -8,6 +8,7 @@ const Mypage = () => {
     const [name, setName] = useState("사용자 이름"); // 서버에서 받아온 닉네임
     const [email, setEmail] = useState("user@example.com");
     const [newName, setNewName] = useState(""); // 새로운 닉네임
+    const [speed, setSpeed] = useState(localStorage.getItem('speed') || '1.5'); // 속도 상태 저장
 
     const handleKakaoLogin = () => {
         // 카카오 로그인 처리 (리다이렉트 방식)
@@ -112,6 +113,12 @@ const Mypage = () => {
         });
         console.log("모든 쿠키 삭제 완료");
     };
+
+    // 속도 버튼 클릭 시 속도를 로컬 스토리지에 저장
+    const handleSpeedChange = (newSpeed: string) => {
+        setSpeed(newSpeed);
+        localStorage.setItem('speed', newSpeed);
+    };
     
     // 로그인되지 않은 경우 로그인 화면을 보여줌
     if (!isLoggedIn) {
@@ -134,6 +141,25 @@ const Mypage = () => {
         <Wrapper>
             <VStack spacing={5} p={5}>
                 <Text fontSize="2xl">마이페이지</Text>
+                {/* 속도 선택 버튼들 */}
+                <Text fontSize="xl">속도 선택</Text>
+                <Box display="flex" gap="10px">
+                    <Button 
+                        colorScheme={speed === '1.3' ? 'blue' : 'gray'} 
+                        onClick={() => handleSpeedChange('1.3')}>
+                        느림
+                    </Button>
+                    <Button 
+                        colorScheme={speed === '1.5' ? 'blue' : 'gray'} 
+                        onClick={() => handleSpeedChange('1.5')}>
+                        보통
+                    </Button>
+                    <Button 
+                        colorScheme={speed === '1.7' ? 'blue' : 'gray'} 
+                        onClick={() => handleSpeedChange('1.7')}>
+                        빠름
+                    </Button>
+                </Box>
                 <Box>
                     <Text>이름: {name}</Text>
                     <Text>이메일: {email}</Text>
