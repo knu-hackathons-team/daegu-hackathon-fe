@@ -128,7 +128,55 @@ const TMapPedestrianRoute = () => {
     }
   }, [startPoint, endPoint, calculateShortestRoute]);
 
-  const handleStartSelection = () => {
+  // POI 검색 함수 추가
+  const getNearbyPOI = async (lat: number, lng: number) => {
+    const url = `https://apis.openapi.sk.com/tmap/pois/search/around?version=1&centerLat=${lat}&centerLon=${lng}&radius=1&appKey=wPnLT4b0AWa0YBI8jsof74ewEVe5JXoUidYnvxXc`;
+  
+    try {
+      console.log("POI 검색 요청:", url); // 요청 URL 확인
+      const response = await fetch(url);
+      const data = await response.json();
+  
+      console.log("POI 검색 응답 데이터:", data); // 응답 데이터 확인
+  
+      if (data.searchPoiInfo.pois.poi.length > 0) {
+        return data.searchPoiInfo.pois.poi[0].name; // 첫 번째 POI의 이름 반환
+      } else {
+        return "주변 건물 이름을 찾을 수 없음";
+      }
+    } catch (error) {
+      console.error("Error fetching POI data:", error);
+      return "getNearbyPOI 오류 발생";
+    }
+  };
+  
+
+  const getBuildingName = async (lat: number, lng: number) => {
+    const url = `https://apis.openapi.sk.com/tmap/geo/reversegeocoding?version=1&lat=${lat}&lon=${lng}&coordType=WGS84GEO&addressType=A10&appKey=wPnLT4b0AWa0YBI8jsof74ewEVe5JXoUidYnvxXc`;
+
+    try {
+      console.log("Sending request to:", url); // 요청 URL 확인
+      const response = await fetch(url);
+
+      console.log("Response status:", response.status); // 응답 상태 확인
+      const data = await response.json();
+
+      console.log("Response data:", data); // 응답 데이터 확인
+
+      if (data.addressInfo) {
+        console.log("Building name found:", data.addressInfo.buildingName);
+        return data.addressInfo.buildingName || data.addressInfo.fullAddress;
+      } else {
+        console.warn("No address info found in the response.");
+        return "건물 이름을 찾을 수 없음";
+      }
+    } catch (error) {
+      console.error("Error fetching building name:", error);
+      return "getBuildingName 오류 발생";
+    }
+  };
+
+  const handleStartSelection = async () => {
     setStartPoint(centerCoords);
     setDistance(null);
     setEstimatedTime(null);
@@ -142,9 +190,19 @@ const TMapPedestrianRoute = () => {
       icon: "https://img.icons8.com/emoji/48/000000/triangular-flag.png",
       map: mapRef.current,
     });
+
+    // 먼저 POI 검색을 시도
+    let buildingName = await getNearbyPOI(centerCoords.lat, centerCoords.lng);
+
+    // POI 정보가 없으면 역지오코딩으로 기본 주소 반환
+    if (!buildingName || buildingName === "주변 건물 이름을 찾을 수 없음") {
+      buildingName = await getBuildingName(centerCoords.lat, centerCoords.lng);
+    }
+
+    setStartPoint((prev: any) => ({ ...prev, buildingName }));
   };
 
-  const handleEndSelection = () => {
+  const handleEndSelection = async () => {
     setEndPoint(centerCoords);
 
     if (endMarkerRef.current) {
@@ -156,6 +214,16 @@ const TMapPedestrianRoute = () => {
       icon: "https://img.icons8.com/emoji/48/000000/triangular-flag.png",
       map: mapRef.current,
     });
+
+    // 먼저 POI 검색을 시도
+    let buildingName = await getNearbyPOI(centerCoords.lat, centerCoords.lng);
+
+    // POI 정보가 없으면 역지오코딩으로 기본 주소 반환
+    if (!buildingName || buildingName === "주변 건물 이름을 찾을 수 없음") {
+      buildingName = await getBuildingName(centerCoords.lat, centerCoords.lng);
+    }
+
+    setEndPoint((prev: any) => ({ ...prev, buildingName }));
   };
 
   const handleGetCurrentLocation = () => {
@@ -190,26 +258,15 @@ const TMapPedestrianRoute = () => {
 
       {isModalVisible && <Modal>현재 사용자 위치로 커서를 이동합니다.</Modal>}
 
-      <InfoBox>
-        <p>위도: {centerCoords.lat.toFixed(6)}</p>
-        <p>경도: {centerCoords.lng.toFixed(6)}</p>
-        {distance && <p>거리: {distance} km</p>}
-        {estimatedTime && <p>예상 이동시간: {estimatedTime * 1.5} 분</p>}
-      </InfoBox>
-
       <LocationBox>
         <p>
-          출발지:{" "}
-          {startPoint
-            ? `${startPoint.lat.toFixed(6)}, ${startPoint.lng.toFixed(6)}`
-            : "미설정"}
+          출발지: {startPoint ? startPoint.buildingName || "미설정" : "미설정"}
         </p>
-        <p>
-          도착지:{" "}
-          {endPoint
-            ? `${endPoint.lat.toFixed(6)}, ${endPoint.lng.toFixed(6)}`
-            : "미설정"}
-        </p>
+        <p>도착지: {endPoint ? endPoint.buildingName || "미설정" : "미설정"}</p>
+                {/* <p>위도: {centerCoords.lat.toFixed(6)}</p> */}
+        {/* <p>경도: {centerCoords.lng.toFixed(6)}</p> */}
+        {distance && <p>거리: {distance * 1000} m</p>}
+        {estimatedTime && <p>예상 이동시간: {estimatedTime * 1.5} 분</p>}
       </LocationBox>
 
       <Tooltip label="현재 위치로 이동" aria-label="현재 위치로 이동">
@@ -251,17 +308,6 @@ const Wrapper = styled.div`
   height: 100vh;
   position: relative;
   margin-bottom: -59.5px;
-`;
-
-const InfoBox = styled.div`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: white;
-  padding: 10px;
-  border-radius: 8px;
-  z-index: 1000;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 `;
 
 const LocationBox = styled.div`
@@ -347,5 +393,5 @@ const CenterDot = styled.div`
   background-color: red;
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  z-index: 1000;
-`;
+  z-index: 1000
+  `;
