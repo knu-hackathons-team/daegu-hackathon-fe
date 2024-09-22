@@ -10,9 +10,11 @@ const Mypage = () => {
     const [newName, setNewName] = useState(""); // 새로운 닉네임
 
     const handleKakaoLogin = () => {
-        // 카카오 로그인 처리 (리다이렉트 방식)
+        // 카카오 로그인 처리 (리다이렉트 방식, 로그인 화면 강제 호출)
         console.log("카카오 로그인 버튼 클릭");
-        window.location.href = "http://43.203.172.143:8080/api/auth/oauth/kakao"; 
+
+        // 카카오 로그인 시 매번 계정 입력 창을 띄우도록 설정
+        window.location.href = "http://43.203.172.143:8080/api/auth/oauth/kakao?prompt=login";
     };
 
     useEffect(() => {
