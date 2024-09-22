@@ -1,7 +1,6 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { RouterPath } from "./path";
 import { Layout } from "@/components/Layout";
-import { MainPage } from "@/pages/Main";
 import MyPage from "@/pages/Mypage";
 import Directions from "@/pages/Directions";
 
@@ -11,9 +10,8 @@ const router = createBrowserRouter([
     path: RouterPath.root,
     element: <Layout />,
     children: [
-      { path: RouterPath.main, element: <MainPage /> },
+      { path: RouterPath.main, element: <Directions /> },
       { path: RouterPath.mypage, element: <MyPage /> },
-      { path: RouterPath.directions, element: <Directions /> },
     ],
   },
 ]);

@@ -7,9 +7,8 @@ export const Navigation: React.FC = () => {
   const [active, setActive] = useState(location.pathname); // 현재 활성화된 경로 추적
   const [activeWidth, setActiveWidth] = useState(0);
   const [activeLeft, setActiveLeft] = useState(0);
-  const directionsRef = useRef<HTMLDivElement>(null);
-  const scheduleRef = useRef<HTMLDivElement>(null);
-  const myPageRef = useRef<HTMLDivElement>(null);
+  const directionsRef = useRef<HTMLDivElement>(null); // 길찾기 버튼 레퍼런스
+  const myPageRef = useRef<HTMLDivElement>(null); // 내정보 버튼 레퍼런스
 
   // 페이지가 로드되거나 새로고침될 때 현재 경로에 맞춰 active 설정
   useEffect(() => {
@@ -18,17 +17,15 @@ export const Navigation: React.FC = () => {
 
   useLayoutEffect(() => {
     switch (active) {
-      case "/directions":
+      case "/": // 길찾기 페이지
         setActiveWidth(directionsRef.current?.offsetWidth || 0);
         setActiveLeft(directionsRef.current?.offsetLeft || 0);
         break;
-      case "/":
-        setActiveWidth(scheduleRef.current?.offsetWidth || 0);
-        setActiveLeft(scheduleRef.current?.offsetLeft || 0);
-        break;
-      case "/mypage":
+      case "/mypage": // 내정보 페이지
         setActiveWidth(myPageRef.current?.offsetWidth || 0);
         setActiveLeft(myPageRef.current?.offsetLeft || 0);
+        break;
+      default:
         break;
     }
   }, [active]);
@@ -37,16 +34,11 @@ export const Navigation: React.FC = () => {
     <Wrapper>
       <NavItemWrapper ref={directionsRef}>
         <NavItem
-          to="/directions"
-          active={active === "/directions"}
-          onClick={() => setActive("/directions")}
+          to="/"
+          active={active === "/"}
+          onClick={() => setActive("/")}
         >
           길찾기
-        </NavItem>
-      </NavItemWrapper>
-      <NavItemWrapper ref={scheduleRef}>
-        <NavItem to="/" active={active === "/"} onClick={() => setActive("/")}>
-          시간표
         </NavItem>
       </NavItemWrapper>
       <NavItemWrapper ref={myPageRef}>

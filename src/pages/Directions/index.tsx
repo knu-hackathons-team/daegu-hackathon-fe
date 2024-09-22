@@ -4,6 +4,7 @@ import { Button, Tooltip } from "@chakra-ui/react";
 import { FiCompass } from "react-icons/fi"; // 나침반 아이콘
 import { useEffect, useState, useRef, useCallback } from "react";
 
+
 // Tmapv2 네임스페이스를 선언
 declare global {
   interface Window {
