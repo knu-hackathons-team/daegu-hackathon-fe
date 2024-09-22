@@ -1,143 +1,107 @@
-import { useState, useEffect } from "react";
-import { Box, Text, Button, VStack, Input } from "@chakra-ui/react";
-import styled from "@emotion/styled";
-import axios from "axios";
+import { useState, useEffect } from 'react';
+import { Box, Text, Button, VStack, Input } from '@chakra-ui/react';
+import styled from '@emotion/styled';
+import axios from 'axios';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '@/redux/store';
+import { setNickname } from '@/redux/nicknameSlice';
 
 const Mypage = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false); // 로그인 상태 확인을 위한 state
-    const [name, setName] = useState("사용자 이름"); // 서버에서 받아온 닉네임
-    const [email, setEmail] = useState("user@example.com");
-    const [newName, setNewName] = useState(""); // 새로운 닉네임
+    const dispatch = useDispatch<AppDispatch>();
+    const nickname = useSelector((state: RootState) => state.nickname.nickname); // Redux 상태에서 닉네임 가져오기
+    const [isLoggedIn, setIsLoggedIn] = useState(false); // 로그인 상태
+    const [email, setEmail] = useState('user@example.com'); // 이메일 상태
+    const [newName, setNewName] = useState(''); // 새 닉네임 입력 값
 
     const handleKakaoLogin = () => {
-        // 카카오 로그인 처리 (리다이렉트 방식, 로그인 화면 강제 호출)
-        console.log("카카오 로그인 버튼 클릭");
-
-        // 카카오 로그인 시 매번 계정 입력 창을 띄우도록 설정
-        window.location.href = "http://43.203.172.143:8080/api/auth/oauth/kakao?prompt=login";
+        // 카카오 로그인 처리 (리다이렉트 방식)
+        window.location.href = 'http://43.203.172.143:8080/api/auth/oauth/kakao?prompt=login';
     };
 
     useEffect(() => {
-        console.log("useEffect 호출: 토큰 확인 중...");
-        // 카카오 토큰 확인 및 서버에서 유저 정보 불러오기
-        const kakaoToken = localStorage.getItem("kakaoToken"); 
+        const kakaoToken = localStorage.getItem('kakaoToken');
         if (kakaoToken) {
-            console.log("카카오 토큰이 있습니다:", kakaoToken);
-            setIsLoggedIn(true); // 로그인 상태로 변경
-            getUserInfo(kakaoToken); // 서버에서 유저 정보 불러오기
-        } else {
-            console.log("카카오 토큰이 없습니다. 로그인이 필요합니다.");
-            setIsLoggedIn(false);
+            setIsLoggedIn(true);
+            getUserInfo(kakaoToken);
         }
     }, []);
 
     const getUserInfo = async (token: string) => {
-        console.log("getUserInfo 호출: 유저 정보 불러오는 중...");
         try {
-            // 서버에서 유저 정보를 가져오는 API 호출
             const response = await axios.get('https://giftshop-kakao.shop/api/member/info', {
                 headers: {
-                    Authorization: `Bearer ${token}`
-                }
+                    Authorization: `Bearer ${token}`,
+                },
             });
-    
+
             if (response.status === 200) {
                 const userData = response.data;
-                console.log("유저 정보 가져오기 성공:", userData);
-
-                localStorage.setItem("nickname", userData.nickName);
-
-                setName(userData.nickName); // 서버에서 받아온 닉네임 설정
-                setEmail(userData.email);   // 서버에서 받아온 이메일 설정
+                localStorage.setItem('nickname', userData.nickName); // 닉네임을 로컬 스토리지에 저장
+                dispatch(setNickname(userData.nickName)); // Redux 상태에 닉네임 저장
+                setEmail(userData.email);
             }
         } catch (error) {
-            console.error("유저 정보 불러오기 중 오류 발생:", error);
+            console.error('유저 정보 불러오기 중 오류 발생:', error);
         }
     };
 
     const handleNicknameChange = async () => {
-        const kakaoToken = localStorage.getItem("kakaoToken"); // 로그인할 때 받은 JWT 토큰
-        console.log("닉네임 변경 시도:", newName);
-    
+        const kakaoToken = localStorage.getItem('kakaoToken');
         if (!newName) {
-            alert("변경할 닉네임을 입력하세요.");
-            console.log("닉네임 입력값이 비어 있습니다.");
+            alert('변경할 닉네임을 입력하세요.');
             return;
         }
-    
+
         try {
-            // JWT 토큰을 Authorization 헤더에 포함하여 서버에 PATCH 요청
             const response = await axios.patch(`https://giftshop-kakao.shop/api/member/nickname`, null, {
                 params: { nickname: newName },
                 headers: {
-                    Authorization: `Bearer ${kakaoToken}` // JWT 토큰을 헤더에 포함
-                }
+                    Authorization: `Bearer ${kakaoToken}`,
+                },
             });
-    
+
             if (response.status === 200) {
-                console.log("닉네임 변경 성공:", newName);
-                setName(newName);
-                alert("닉네임이 성공적으로 변경되었습니다.");
-            } else {
-                console.log("닉네임 변경 실패:", response);
-                alert("닉네임 변경에 실패했습니다.");
+                dispatch(setNickname(newName)); // Redux 상태에 새 닉네임 반영
+                localStorage.setItem('nickname', newName); // 로컬 스토리지에 새 닉네임 저장
+                alert('닉네임이 성공적으로 변경되었습니다.');
             }
         } catch (error) {
-            console.error("닉네임 변경 중 오류 발생:", error);
+            console.error('닉네임 변경 중 오류 발생:', error);
         }
     };
 
     const handleLogout = () => {
-        console.log("로그아웃 처리 중...");
-        
-        // 로컬 스토리지에서 kakaoToken 삭제
-        localStorage.removeItem("kakaoToken");
-        console.log("로컬 스토리지에서 kakaoToken 삭제 완료");
-        
-        // 쿠키 삭제
+        localStorage.removeItem('kakaoToken');
         clearCookies();
-        console.log("쿠키 삭제 완료");
-
-        // 로그인 상태 해제
         setIsLoggedIn(false);
-        console.log("로그아웃 완료: 로그인 상태 해제");
-
-        alert("로그아웃 되었습니다. 다른 계정으로 로그인할 수 있습니다.");
+        alert('로그아웃 되었습니다.');
     };
 
-    // 쿠키 삭제 함수
     const clearCookies = () => {
-        document.cookie.split(";").forEach((cookie) => {
+        document.cookie.split(';').forEach((cookie) => {
             document.cookie = cookie
-                .replace(/^ +/, "")
-                .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                .replace(/^ +/, '')
+                .replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
         });
-        console.log("모든 쿠키 삭제 완료");
     };
-    
-    // 로그인되지 않은 경우 로그인 화면을 보여줌
+
     if (!isLoggedIn) {
-        console.log("로그인 화면 표시 중...");
         return (
             <Wrapper>
                 <VStack spacing={5} p={5}>
                     <Text fontSize="2xl">로그인 하여 이용하시겠습니까?</Text>
-                    <StyledKakaoButton onClick={handleKakaoLogin}>
-                        카카오 로그인
-                    </StyledKakaoButton>
+                    <StyledKakaoButton onClick={handleKakaoLogin}>카카오 로그인</StyledKakaoButton>
                 </VStack>
             </Wrapper>
         );
     }
 
-    // 로그인된 경우 마이페이지 화면을 보여줌
-    console.log("로그인된 상태로 마이페이지 화면 표시 중...");
     return (
         <Wrapper>
             <VStack spacing={5} p={5}>
                 <Text fontSize="2xl">마이페이지</Text>
                 <Box>
-                    <Text>이름: {name}</Text>
+                    <Text>닉네임: {nickname}</Text>
                     <Text>이메일: {email}</Text>
                 </Box>
                 <Input
@@ -166,17 +130,16 @@ const Wrapper = styled.div`
   margin-bottom: -59.5px;
 `;
 
-// 카카오 로그인 버튼 스타일
 const StyledKakaoButton = styled(Button)`
   background-color: #fae64d;
   color: black;
-  width: 250px; /* 버튼 너비 설정 */
-  height: 60px; /* 버튼 높이 설정 */
-  font-size: 1.2rem; /* 글자 크기 설정 */
+  width: 250px;
+  height: 60px;
+  font-size: 1.2rem;
   font-weight: bold;
 
   &:hover {
-    background-color: #e6d14b; /* 호버 시 살짝 더 어두운 색상 */
+    background-color: #e6d14b;
   }
 `;
 
