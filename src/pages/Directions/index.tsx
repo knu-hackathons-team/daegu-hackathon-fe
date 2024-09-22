@@ -20,7 +20,9 @@ const TMapPedestrianRoute = () => {
   const [endPoint, setEndPoint] = useState<any>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [estimatedTime, setEstimatedTime] = useState<number | null>(null);
-  const [isModalVisible, setIsModalVisible] = useState(false); // 모달 상태 추가
+  const [isModalVisible, setIsModalVisible] = useState(false); // 나침반 모달
+  const [selectionModalVisible, setSelectionModalVisible] = useState(true); // 초기 안내 모달 상태
+
   const mapRef = useRef<any>(null);
   const polylineRef = useRef<any>(null);
   const startMarkerRef = useRef<any>(null);
@@ -108,11 +110,11 @@ const TMapPedestrianRoute = () => {
   
             // 출발지에 빨간 원 그리기
             startCircleRef.current = new window.Tmapv2.Circle({
-              center: path[0], // 경로의 첫 번째 좌표가 출발지
-              radius: 4.5, // 반지름 크기 (미터 단위)
-              strokeColor: "#FF0000", // 원의 테두리 색
-              fillColor: "#FF0000", // 원 내부 색상
-              fillOpacity: 1, // 원 내부 투명도
+              center: path[0], 
+              radius: 4.5,
+              strokeColor: "#FF0000",
+              fillColor: "#FF0000",
+              fillOpacity: 1,
               map: mapRef.current,
             });
   
@@ -124,11 +126,11 @@ const TMapPedestrianRoute = () => {
             // 도착지에 빨간 원 그리기
             const lastCoord = path[path.length - 1];
             endCircleRef.current = new window.Tmapv2.Circle({
-              center: lastCoord, // 경로의 마지막 좌표가 도착지
-              radius: 4.5, // 반지름 크기 (미터 단위)
-              strokeColor: "#FF0000", // 원의 테두리 색
-              fillColor: "#FF0000", // 원 내부 색상
-              fillOpacity: 1, // 원 내부 투명도
+              center: lastCoord, 
+              radius: 4.5, 
+              strokeColor: "#FF0000",
+              fillColor: "#FF0000", 
+              fillOpacity: 1,
               map: mapRef.current,
             });
           }
@@ -223,6 +225,7 @@ const TMapPedestrianRoute = () => {
       icon: "https://img.icons8.com/emoji/48/000000/triangular-flag.png",
       map: mapRef.current,
     });
+
 // 먼저 POI 검색을 시도
 let buildingName = await getNearbyPOI(centerCoords.lat, centerCoords.lng);
 
@@ -232,6 +235,7 @@ if (!buildingName || buildingName === "주변 건물 이름을 찾을 수 없음
 }
 
 setStartPoint((prev: any) => ({ ...prev, buildingName }));
+
 };
 
   const handleEndSelection = async () => {
@@ -247,15 +251,16 @@ setStartPoint((prev: any) => ({ ...prev, buildingName }));
       map: mapRef.current,
     });
      // 먼저 POI 검색을 시도
-     let buildingName = await getNearbyPOI(centerCoords.lat, centerCoords.lng);
+    let buildingName = await getNearbyPOI(centerCoords.lat, centerCoords.lng);
 
-     // POI 정보가 없으면 역지오코딩으로 기본 주소 반환
-     if (!buildingName || buildingName === "주변 건물 이름을 찾을 수 없음") {
-       buildingName = await getBuildingName(centerCoords.lat, centerCoords.lng);
-     }
- 
-     setEndPoint((prev: any) => ({ ...prev, buildingName }));
-   };
+    // POI 정보가 없으면 역지오코딩으로 기본 주소 반환
+    if (!buildingName || buildingName === "주변 건물 이름을 찾을 수 없음") {
+      buildingName = await getBuildingName(centerCoords.lat, centerCoords.lng);
+    }
+
+    setEndPoint((prev: any) => ({ ...prev, buildingName }));
+
+  };
 
   const handleGetCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -286,8 +291,8 @@ setStartPoint((prev: any) => ({ ...prev, buildingName }));
     <Wrapper>
       <div id="map_div"></div>
       <CenterDot />
-
-      {isModalVisible && <Modal>현재 사용자 위치로 커서를 이동합니다.</Modal>}
+      {selectionModalVisible && (<Modal duration={3}>출발지와 도착지를 선택해주세요</Modal>)}
+      {isModalVisible && <Modal duration={1.7}>현재 사용자 위치로 커서를 이동합니다.</Modal>}
 
       <LocationBox>
         <p>
@@ -362,7 +367,7 @@ const LocationButton = styled(Button)`
   }
 `;
 
-const Modal = styled.div`
+const Modal = styled.div<{ duration: number }>`
   position: absolute;
   top: 50%;
   left: 50%;
@@ -373,7 +378,7 @@ const Modal = styled.div`
   border-radius: 8px;
   z-index: 2000;
   opacity: 0;
-  animation: fadeInOut 1.7s forwards;
+  animation: ${({ duration }) => `fadeInOut ${duration}s forwards`};
 
   @keyframes fadeInOut {
     0% {
@@ -390,6 +395,7 @@ const Modal = styled.div`
     }
   }
 `;
+
 
 const ButtonWrapper = styled.div`
   position: absolute;
