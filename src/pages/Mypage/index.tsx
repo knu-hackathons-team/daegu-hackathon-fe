@@ -1,17 +1,22 @@
 import { useState, useEffect } from "react";
-import { Box, Text, Button, VStack } from "@chakra-ui/react";
+import { Box, Text, Button, VStack, Input } from "@chakra-ui/react";
 import styled from "@emotion/styled";
+import axios from "axios";
 
 const Mypage = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false); // 로그인 상태 확인을 위한 state
     const [name, setName] = useState("사용자 이름");
     const [email, setEmail] = useState("user@example.com");
+    const [newName, setNewName] = useState(""); // 새로운 닉네임
 
     useEffect(() => {
         // localStorage나 sessionStorage에 저장된 카카오 토큰 확인
         const kakaoToken = localStorage.getItem("kakaoToken"); // 토큰 저장 방식에 따라 변경 가능
+        console.log("현재 토큰", kakaoToken);
         if (kakaoToken) {
             setIsLoggedIn(true); // 로그인 상태로 변경
+        } else {
+            setIsLoggedIn(false); // 토큰이 없으면 비로그인 상태 유지
         }
     }, []);
 
@@ -19,6 +24,34 @@ const Mypage = () => {
         // 카카오 로그인 처리 로직 (리다이렉트 방식 사용)
         window.location.href = "http://43.203.172.143:8080/api/auth/oauth/kakao"; // 카카오 로그인 URL
     };
+
+    const handleNicknameChange = async () => {
+        const kakaoToken = localStorage.getItem("kakaoToken");
+    
+        if (!newName) {
+            alert("변경할 닉네임을 입력하세요.");
+            return;
+        }
+    
+        try {
+            const response = await axios.patch(`http://43.203.172.143:8080/api/member/nickname`, null, {
+                params: { nickname: newName },
+                headers: {
+                    Authorization: `Bearer ${kakaoToken}`
+                }
+            });
+    
+            if (response.status === 200) {
+                setName(newName);
+                alert("닉네임이 성공적으로 변경되었습니다.");
+            } else {
+                alert("닉네임 변경에 실패했습니다.");
+            }
+        } catch (error) {
+            console.error("Error updating nickname:", error);
+        }
+    };
+    
 
     // 로그인되지 않은 경우 로그인 화면을 보여줌
     if (!isLoggedIn) {
@@ -43,8 +76,13 @@ const Mypage = () => {
                     <Text>이름: {name}</Text>
                     <Text>이메일: {email}</Text>
                 </Box>
-                <Button colorScheme="blue" onClick={() => alert("프로필 편집 클릭됨")}>
-                    프로필 편집
+                <Input
+                    placeholder="새 닉네임 입력"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                />
+                <Button colorScheme="blue" onClick={handleNicknameChange}>
+                    닉네임 변경
                 </Button>
             </VStack>
         </Wrapper>
