@@ -11,6 +11,9 @@ import {
 } from "@chakra-ui/react";
 import ModalComponent from "./ModalComponent";
 
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+
 // 과목 타입 정의
 interface CourseType {
   name: string;
@@ -65,8 +68,7 @@ export const Contents = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>("");
 
-  const nickname = localStorage.getItem("nickname");
-
+  const nickname = useSelector((state: RootState) => state.nickname.value);
 
   const openModal = (day: string) => {
     setSelectedDay(day);
@@ -210,8 +212,8 @@ export const Contents = () => {
 
       <TimetableWrapper>
         <Header>
-          <Text>{nickname}님의 시간표</Text>
-          <GridHeader>
+        <Text>{`${nickname}님의 시간표`}</Text>
+        <GridHeader>
             <div></div> {/* 빈 칸 (시간 부분) */}
             <div onClick={() => openModal("월")}>월</div>
             <div onClick={() => openModal("화")}>화</div>

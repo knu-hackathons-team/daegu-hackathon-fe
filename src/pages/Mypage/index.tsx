@@ -3,14 +3,20 @@ import { Box, Text, Button, VStack, Input } from "@chakra-ui/react";
 import styled from "@emotion/styled";
 import axios from "axios";
 
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { setNickname } from '@/redux/nicknameSlice';
+
 const Mypage = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false); // 로그인 상태 확인을 위한 state
-    const [name, setName] = useState("사용자 이름"); // 서버에서 받아온 닉네임
     const [email, setEmail] = useState("user@example.com");
     const [newName, setNewName] = useState(""); // 새로운 닉네임
 
+    const nickname = useSelector((state: RootState) => state.nickname.value);
+    const dispatch = useDispatch();
+
+    // 카카오 로그인 함수
     const handleKakaoLogin = () => {
-        // 카카오 로그인 처리 (리다이렉트 방식)
         window.location.href = "http://43.203.172.143:8080/api/auth/oauth/kakao"; 
     };
 
@@ -25,6 +31,11 @@ const Mypage = () => {
         }
     }, []);
 
+    useEffect(() => {
+        // 닉네임이 변경될 때마다 실행되는 효과
+        console.log('닉네임 변경:', nickname);
+    }, [nickname]); // 닉네임이 변경될 때마다 실행
+
     const getUserInfo = async (token: string) => {
         try {
             // 서버에서 유저 정보를 가져오는 API 호출
@@ -37,10 +48,9 @@ const Mypage = () => {
             if (response.status === 200) {
                 const userData = response.data;
 
-                localStorage.setItem("nickname", userData.nickName);
-
-                setName(userData.nickName); // 서버에서 받아온 닉네임 설정
+                setNewName(userData.nickName); // 서버에서 받아온 닉네임 설정
                 setEmail(userData.email);   // 서버에서 받아온 이메일 설정
+                dispatch(setNickname(userData.nickName)); // Redux에 닉네임 설정
             }
         } catch (error) {
             console.error("Error fetching user info:", error);
@@ -65,8 +75,8 @@ const Mypage = () => {
             });
     
             if (response.status === 200) {
-                setName(newName);
-                alert("닉네임이 성공적으로 변경되었습니다.");
+                dispatch(setNickname(newName)); // Redux 상태에 닉네임 업데이트
+                alert('닉네임이 성공적으로 변경되었습니다.');
             } else {
                 alert("닉네임 변경에 실패했습니다.");
             }
@@ -74,7 +84,6 @@ const Mypage = () => {
             console.error("Error updating nickname:", error);
         }
     };
-    
 
     // 로그인되지 않은 경우 로그인 화면을 보여줌
     if (!isLoggedIn) {
@@ -96,7 +105,7 @@ const Mypage = () => {
             <VStack spacing={5} p={5}>
                 <Text fontSize="2xl">마이페이지</Text>
                 <Box>
-                    <Text>이름: {name}</Text>
+                    <Text>이름: {nickname ? nickname : '닉네임 없음'}</Text>
                     <Text>이메일: {email}</Text>
                 </Box>
                 <Input
