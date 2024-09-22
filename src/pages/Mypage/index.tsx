@@ -5,28 +5,50 @@ import axios from "axios";
 
 const Mypage = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false); // 로그인 상태 확인을 위한 state
-    const [name, setName] = useState("사용자 이름");
+    const [name, setName] = useState("사용자 이름"); // 서버에서 받아온 닉네임
     const [email, setEmail] = useState("user@example.com");
     const [newName, setNewName] = useState(""); // 새로운 닉네임
 
+    const handleKakaoLogin = () => {
+        // 카카오 로그인 처리 (리다이렉트 방식)
+        window.location.href = "http://43.203.172.143:8080/api/auth/oauth/kakao"; 
+    };
+
     useEffect(() => {
-        // localStorage나 sessionStorage에 저장된 카카오 토큰 확인
-        const kakaoToken = localStorage.getItem("kakaoToken"); // 토큰 저장 방식에 따라 변경 가능
-        console.log("현재 토큰", kakaoToken);
+        // 카카오 토큰 확인 및 서버에서 유저 정보 불러오기
+        const kakaoToken = localStorage.getItem("kakaoToken"); 
         if (kakaoToken) {
             setIsLoggedIn(true); // 로그인 상태로 변경
+            getUserInfo(kakaoToken); // 서버에서 유저 정보 불러오기
         } else {
-            setIsLoggedIn(false); // 토큰이 없으면 비로그인 상태 유지
+            setIsLoggedIn(false);
         }
     }, []);
 
-    const handleKakaoLogin = () => {
-        // 카카오 로그인 처리 로직 (리다이렉트 방식 사용)
-        window.location.href = "http://43.203.172.143:8080/api/auth/oauth/kakao"; // 카카오 로그인 URL
+    const getUserInfo = async (token: string) => {
+        try {
+            // 서버에서 유저 정보를 가져오는 API 호출
+            const response = await axios.get('https://giftshop-kakao.shop/api/member/info', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+    
+            if (response.status === 200) {
+                const userData = response.data;
+
+                localStorage.setItem("nickname", userData.nickName);
+
+                setName(userData.nickName); // 서버에서 받아온 닉네임 설정
+                setEmail(userData.email);   // 서버에서 받아온 이메일 설정
+            }
+        } catch (error) {
+            console.error("Error fetching user info:", error);
+        }
     };
 
     const handleNicknameChange = async () => {
-        const kakaoToken = localStorage.getItem("kakaoToken");
+        const kakaoToken = localStorage.getItem("kakaoToken"); // 로그인할 때 받은 JWT 토큰
     
         if (!newName) {
             alert("변경할 닉네임을 입력하세요.");
@@ -34,10 +56,11 @@ const Mypage = () => {
         }
     
         try {
-            const response = await axios.patch(`http://43.203.172.143:8080/api/member/nickname`, null, {
+            // JWT 토큰을 Authorization 헤더에 포함하여 서버에 PATCH 요청
+            const response = await axios.patch(`https://giftshop-kakao.shop/api/member/nickname`, null, {
                 params: { nickname: newName },
                 headers: {
-                    Authorization: `Bearer ${kakaoToken}`
+                    Authorization: `Bearer ${kakaoToken}` // JWT 토큰을 헤더에 포함
                 }
             });
     
