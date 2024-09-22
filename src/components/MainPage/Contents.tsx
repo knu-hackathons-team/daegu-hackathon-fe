@@ -185,7 +185,7 @@ export const Contents = () => {
   ) => {
     setTimetable((prev) => {
       const newTimetable = [...prev];
-      const slotIndex = hour - 6;
+      const slotIndex = hour - 5;
       if (slotIndex >= 0 && slotIndex < newTimetable.length) {
         newTimetable[slotIndex][day] = null; // 해당 시간대의 과목을 삭제
       }
