@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Box, Text, VStack, Input, Button } from "@chakra-ui/react";
 import styled from "@emotion/styled";
 import axios from "axios";
-import kakaologinImage from "./assets/kakao_login_medium_narrow.png"; // 이미지 파일을 import
+import kakaologinImage from "./assets/kakaoLoginButton.svg"; // 이미지 파일을 import
 
 const Mypage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -17,10 +17,10 @@ const Mypage = () => {
   };
 
   useEffect(() => {
-    const kakaoToken = localStorage.getItem("kakaoToken");
-    if (kakaoToken) {
+    const jwt = localStorage.getItem("jwt");
+    if (jwt) {
       setIsLoggedIn(true);
-      getUserInfo(kakaoToken);
+      getUserInfo(jwt);
     } else {
       setIsLoggedIn(false);
     }
@@ -49,7 +49,7 @@ const Mypage = () => {
   };
 
   const handleNicknameChange = async () => {
-    const jwtToken = localStorage.getItem("jwtToken");
+    const jwt = localStorage.getItem("jwt");
 
     if (!newName) {
       alert("변경할 닉네임을 입력하세요.");
@@ -63,7 +63,7 @@ const Mypage = () => {
         {
           params: { nickname: newName },
           headers: {
-            Authorization: `Bearer ${jwtToken}`,
+            Authorization: `Bearer ${jwt}`,
           },
         }
       );
@@ -80,7 +80,7 @@ const Mypage = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("jwtToken");
+    localStorage.removeItem("jwt");
     clearCookies();
     setIsLoggedIn(false);
     alert("로그아웃 되었습니다.");

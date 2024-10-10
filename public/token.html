@@ -23,7 +23,7 @@
       if (token) {
         // 토큰이 존재하면 로컬 스토리지에 저장
         console.log("Received token:", token);
-        localStorage.setItem("jwtToken", token);
+        localStorage.setItem("jwt", token);
         tokenDisplay.textContent = `Received token: ${token}`;
         // 확인 후 홈페이지로 리디렉션 - 추후 삭제 예정
         setTimeout(() => {
