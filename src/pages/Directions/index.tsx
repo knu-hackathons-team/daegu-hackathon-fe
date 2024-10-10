@@ -277,12 +277,12 @@ const TMapPedestrianRoute = () => {
   };
 
   const handleSendKakao = async () => {
-    const kakaoToken = localStorage.getItem("kakaoToken"); 
-    console.log(kakaoToken)
+    const jwt = localStorage.getItem("jwt"); 
+    console.log(jwt)
     const url = "https://giftshop-kakao.shop/api/timetable/kakao";
 
-    if (!kakaoToken) {
-      console.error("카카오 토큰이 없습니다.");
+    if (!jwt) {
+      console.error("jwt이 없습니다.");
       return;
     }
 
@@ -303,7 +303,7 @@ const TMapPedestrianRoute = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${kakaoToken}`,
+          Authorization: `Bearer ${jwt}`,
         },
         body: JSON.stringify(requestBody),
       });
