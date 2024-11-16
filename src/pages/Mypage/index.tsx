@@ -103,7 +103,7 @@ const Mypage = () => {
     return (
       <Wrapper>
         <VStack spacing={5} p={5}>
-          <Text fontSize="2xl">로그인 하여 이용하시겠습니까?</Text>
+          <Text fontSize="lg">로그인 하여 이용하시겠습니까?</Text>
           {/* 이미지 버튼으로 변경 */}
           <StyledKakaoImage
             src={kakaologinImage}

@@ -1,7 +1,13 @@
-/** @jsxImportSource @emotion/react */
-import styled from "@emotion/styled";
-import { Button, Tooltip } from "@chakra-ui/react";
-import { FiCompass } from "react-icons/fi"; // 나침반 아이콘
+import {
+  Box,
+  Button,
+  Tooltip,
+  useToast,
+  Flex,
+  Text,
+  Divider,
+} from "@chakra-ui/react";
+import { FiCompass } from "react-icons/fi";
 import { useEffect, useState, useRef, useCallback } from "react";
 
 // Tmapv2 네임스페이스를 선언
@@ -21,8 +27,7 @@ const TMapPedestrianRoute = () => {
   const [distance, setDistance] = useState<number | null>(null);
   const [estimatedTime, setEstimatedTime] = useState<number | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false); // 나침반 모달
-  const [selectionModalVisible, setSelectionModalVisible] = useState(true); // 초기 안내 모달 상태
-
+  const toast = useToast(); // useToast 훅 초기화
   const mapRef = useRef<any>(null);
   const polylineRef = useRef<any>(null);
   const startMarkerRef = useRef<any>(null);
@@ -277,16 +282,30 @@ const TMapPedestrianRoute = () => {
   };
 
   const handleSendKakao = async () => {
-    const jwt = localStorage.getItem("jwt"); 
-    console.log(jwt)
+    const jwt = localStorage.getItem("jwt");
+    console.log(jwt);
     const url = "https://giftshop-kakao.shop/api/timetable/kakao";
 
     if (!jwt) {
+      toast({
+        title: "카카오 메시지 전송에 실패했습니다.",
+        status: "error",
+        duration: 3000,
+        position: "top",
+        isClosable: true,
+      });
       console.error("jwt이 없습니다.");
       return;
     }
 
     if (!startPoint || !endPoint || !estimatedTime || !distance) {
+      toast({
+        title: "카카오 메시지 전송에 실패했습니다.",
+        status: "error",
+        duration: 3000,
+        position: "top",
+        isClosable: true,
+      });
       console.error("모든 필드가 채워지지 않았습니다.");
       return;
     }
@@ -295,7 +314,7 @@ const TMapPedestrianRoute = () => {
       start: startPoint.buildingName || "미설정",
       end: endPoint.buildingName || "미설정",
       estimatedTime: estimatedTime * speedMultiplier,
-      buildingDistance: distance * 1000, // m 단위로 전송
+      buildingDistance: distance * 1000,
     };
 
     try {
@@ -309,29 +328,75 @@ const TMapPedestrianRoute = () => {
       });
 
       if (response.ok) {
+        toast({
+          title: "카카오 메시지가 전송되었습니다.",
+          status: "success",
+          duration: 3000,
+          position: "top",
+          isClosable: true,
+        });
         console.log("카톡 메시지 전송 성공");
       } else {
+        toast({
+          title: "카카오 메시지 전송에 실패했습니다.",
+          status: "error",
+          duration: 3000,
+          position: "top",
+          isClosable: true,
+        });
         console.error("카톡 메시지 전송 실패:", response.status);
       }
     } catch (error) {
+      toast({
+        title: "카카오 메시지 전송에 실패했습니다.",
+        status: "error",
+        duration: 3000,
+        position: "top",
+        isClosable: true,
+      });
       console.error("카톡 메시지 전송 중 오류 발생:", error);
     }
   };
 
   return (
-    <Wrapper>
-      <div id="map_div"></div>
-      <CenterDot />
-      <LocationBox>
-        <p>
+    <Box position="relative" width="100%" height="100vh" marginBottom="-59.5px">
+      <Box id="map_div"></Box>
+
+      {/* CenterDot */}
+      <Box
+        position="absolute"
+        top="50%"
+        left="50%"
+        width="7px"
+        height="7px"
+        backgroundColor="red"
+        borderRadius="50%"
+        transform="translate(-50%, -50%)"
+        zIndex={1000}
+      />
+
+      {/* LocationBox */}
+      <Box
+        position="absolute"
+        top="10px"
+        left="10px"
+        bg="white"
+        p="10px"
+        borderRadius="8px"
+        zIndex={1000}
+        boxShadow="0 4px 6px rgba(0, 0, 0, 0.3)"
+      >
+        <Text>
           출발지: {startPoint ? startPoint.buildingName || "미설정" : "미설정"}
-        </p>
-        <p>도착지: {endPoint ? endPoint.buildingName || "미설정" : "미설정"}</p>
-        {distance && <p>거리: {distance * 1000} m</p>}
+        </Text>
+        <Text>
+          도착지: {endPoint ? endPoint.buildingName || "미설정" : "미설정"}
+        </Text>
+        {distance && <Text>거리: {distance * 1000} m</Text>}
         {estimatedTime && (
-          <p>예상 이동시간: {estimatedTime * speedMultiplier} 분</p>
+          <Text>예상 이동시간: {estimatedTime * speedMultiplier} 분</Text>
         )}
-        <p>
+        <Text>
           현재 속도:
           {speedMultiplier === 2.0
             ? " 느림"
@@ -340,121 +405,71 @@ const TMapPedestrianRoute = () => {
             : speedMultiplier === 1.2
             ? " 빠름"
             : " 알 수 없음"}
-        </p>
-      </LocationBox>
-      <ButtonWrapper>
+        </Text>
+      </Box>
+
+      {/* ButtonWrapper */}
+      <Flex
+        position="absolute"
+        bottom="110px"
+        left="50%"
+        transform="translateX(-50%)"
+        zIndex={1000}
+        bg="white"
+        p="10px"
+        borderRadius="8px"
+        boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
+        justifyContent="space-between"
+        alignItems="center"
+        gap="10px"
+      >
         <Tooltip
           label="현재 위치로 이동"
           aria-label="현재 위치로 이동"
           placement="top"
         >
-          <LocationButton onClick={handleGetCurrentLocation}>
+          <Button
+            position="absolute"
+            bottom="80px"
+            left="50%"
+            transform="translateX(-50%)"
+            bg="#666666"
+            boxShadow="0 4px 6px rgba(0, 0, 0, 0.3)"
+            p="22px"
+            _hover={{ bg: "#999999" }}
+            onClick={handleGetCurrentLocation}
+          >
             <FiCompass size={24} color="white" />
-          </LocationButton>
+          </Button>
         </Tooltip>
-        <Button
-          onClick={handleStartSelection}
-          bg="blue.500"
-          color="white"
-          _hover={{ bg: "blue.600" }}
-        >
+
+        <Button onClick={handleStartSelection} colorScheme="blue">
           출발지 선택
         </Button>
 
-        <Divider />
+        <Divider orientation="vertical" height="30px" />
 
-        <Button
-          onClick={handleEndSelection}
-          bg="green.500"
-          color="white"
-          _hover={{ bg: "green.600" }}
-        >
+        <Button onClick={handleEndSelection} colorScheme="green">
           도착지 선택
         </Button>
-      </ButtonWrapper>
+      </Flex>
 
-      <SendKakaoButton onClick={handleSendKakao}>카톡전송</SendKakaoButton>
-    </Wrapper>
+      {/* SendKakaoButton */}
+      <Button
+        position="absolute"
+        right="20px"
+        bottom="50%"
+        transform="translateY(50%)"
+        bg="#f9d54e"
+        color="white"
+        boxShadow="0 4px 6px rgba(0, 0, 0, 0.3)"
+        _hover={{ bg: "#f2c30d" }}
+        onClick={handleSendKakao}
+      >
+        카톡전송
+      </Button>
+    </Box>
   );
 };
 
 export default TMapPedestrianRoute;
-
-// 스타일 정의
-const Wrapper = styled.div`
-  width: 100%;
-  height: 100vh;
-  position: relative;
-  margin-bottom: -59.5px;
-`;
-
-const LocationBox = styled.div`
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background-color: white;
-  padding: 10px;
-  border-radius: 8px;
-  z-index: 1000;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-`;
-
-const LocationButton = styled(Button)`
-  position: absolute;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #666666;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-  padding: 22px;
-  &:hover {
-    background-color: #999999; /* 더 짙은 회색으로 hover 효과 */
-  }
-`;
-
-const ButtonWrapper = styled.div`
-  position: absolute;
-  bottom: 110px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  background-color: white;
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-`;
-
-const Divider = styled.div`
-  height: 30px;
-  width: 2px;
-  background-color: gray;
-`;
-
-const CenterDot = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 7px;
-  height: 7px;
-  background-color: red;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1000;
-`;
-
-const SendKakaoButton = styled(Button)`
-  position: absolute;
-  right: 20px;
-  bottom: 50%;
-  transform: translateY(50%);
-  background-color: #f9d54e;
-  color: white;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-  &:hover {
-    background-color: #f2c30d;
-  }
-`;
